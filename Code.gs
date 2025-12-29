@@ -10,12 +10,48 @@
  */
 
 // ========================================
+// WEB APP ENTRY POINT
+// ========================================
+
+/**
+ * doGet - Handle HTTP GET requests
+ * รองรับ URL parameters เช่น ?page=dashboard
+ */
+function doGet(e) {
+  // Get page parameter from URL (e.g., ?page=dashboard)
+  const page = e.parameter.page || null;
+
+  // Create template
+  const template = HtmlService.createTemplateFromFile("index");
+  template.initialPage = page; // Pass page to template
+
+  return template
+    .evaluate()
+    .setTitle("Booking Control System")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+/**
+ * Include HTML files (for server-side includes)
+ * ใช้สำหรับ <?!= include('filename'); ?>
+ */
+function include(filename) {
+  try {
+    return HtmlService.createTemplateFromFile(filename).evaluate().getContent();
+  } catch (e) {
+    Logger.log("Error including file " + filename + ": " + e.toString());
+    return "<!-- Error including " + filename + " -->";
+  }
+}
+
+// ========================================
 // CONFIGURATION - Fixed Sheet ID
 // ========================================
 
 const CONFIG = {
-  SPREADSHEET_ID: "YOUR_SPREADSHEET_ID_HERE", // ⚠️ ใส่ Spreadsheet ID ของคุณที่นี่
-  DRIVE_FOLDER_ID: "YOUR_DRIVE_FOLDER_ID_HERE", // ⚠️ ใส่ Drive Folder ID สำหรับเก็บสลิป
+  SPREADSHEET_ID: "1VHWoJ3UyBTUWLXVRBZFu4iURzRZY_H3HDQRRJfqfq8k", // ⚠️ ใส่ Spreadsheet ID ของคุณที่นี่
+  DRIVE_FOLDER_ID: "1Ql0vYsZdJ9XbTTEquGu18RAKasgh7VLi", // ⚠️ ใส่ Drive Folder ID สำหรับเก็บสลิป
 
   // Sheet Names
   SHEETS: {
@@ -28,7 +64,7 @@ const CONFIG = {
 
   // User Roles
   ROLES: {
-    SALES: "Sales",
+    SALE: "Sale",
     OP: "OP",
     ADMIN: "Admin",
     AR_AP: "AR_AP",
@@ -116,49 +152,231 @@ function formatDate(date, format = "yyyy-MM-dd") {
 }
 
 // ========================================
-// SESSION MANAGEMENT
+// SESSION MANAGEMENT (Client-Side)
 // ========================================
+// หมายเหตุ: Session จะถูกเก็บใน Browser (localStorage) แทน Server
+// เพื่อให้สามารถ Login หลาย Browser ด้วย User คนละคนได้
 
 /**
- * Set User Session
+ * Validate Session Token
+ * ตรวจสอบ Session Token ที่ส่งมาจาก Client
  */
-function setSession(userId, username, role) {
-  const userProperties = PropertiesService.getUserProperties();
+function validateSession(sessionToken) {
+  if (!sessionToken) return null;
+
+  try {
+    // Decode session token (Base64)
+    const decoded = Utilities.newBlob(
+      Utilities.base64Decode(sessionToken)
+    ).getDataAsString();
+
+    const sessionData = JSON.parse(decoded);
+
+    // ตรวจสอบว่า Session หมดอายุหรือไม่ (24 ชั่วโมง)
+    const now = new Date().getTime();
+    const sessionAge = now - sessionData.loginTime;
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+    if (sessionAge > maxAge) {
+      return null; // Session หมดอายุ
+    }
+
+    // ตรวจสอบว่า User ยังมีอยู่และ Active
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[0] === sessionData.userId && row[6] === "เปิดใช้งาน") {
+        return {
+          userId: sessionData.userId,
+          username: sessionData.username,
+          role: sessionData.role,
+          fullName: row[4],
+          loginTime: sessionData.loginTime,
+        };
+      }
+    }
+
+    return null; // User ไม่พบหรือไม่ Active
+  } catch (error) {
+    Logger.log("Session validation error: " + error.message);
+    return null;
+  }
+}
+
+/**
+ * Create Session Token
+ * สร้าง Session Token สำหรับส่งกลับไปยัง Client
+ */
+function createSessionToken(userId, username, role) {
   const sessionData = {
     userId: userId,
     username: username,
     role: role,
     loginTime: new Date().getTime(),
   };
-  userProperties.setProperty("session", JSON.stringify(sessionData));
+
+  // Encode to Base64
+  const jsonString = JSON.stringify(sessionData);
+  const encoded = Utilities.base64Encode(jsonString);
+
+  return encoded;
 }
 
 /**
- * Get User Session
+ * Check User Role (รับ sessionToken จาก Client)
+ */
+function hasRoleWithToken(sessionToken, requiredRole) {
+  const session = validateSession(sessionToken);
+  if (!session) return false;
+
+  // Owner has access to everything
+  if (session.role === CONFIG.ROLES.OWNER) return true;
+
+  // Check specific role
+  if (Array.isArray(requiredRole)) {
+    return requiredRole.includes(session.role);
+  }
+  return session.role === requiredRole;
+}
+
+/**
+ * Get Current User (Optimized)
+ * ดึงข้อมูล User ปัจจุบันจาก Session Token
+ */
+function getCurrentUser(sessionToken) {
+  try {
+    if (!sessionToken) {
+      return {
+        success: false,
+        message: "ไม่พบ Session Token",
+      };
+    }
+
+    // Validate session (already checks user exists and is active)
+    const session = validateSession(sessionToken);
+
+    if (!session) {
+      return {
+        success: false,
+        message: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
+      };
+    }
+
+    // Return user data from validated session
+    return {
+      success: true,
+      data: {
+        userId: session.userId,
+        username: session.username,
+        fullName: session.fullName,
+        role: session.role,
+        loginTime: session.loginTime,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
+}
+
+// ========================================
+// LEGACY SESSION FUNCTIONS (สำหรับ Backward Compatibility)
+// ========================================
+// ฟังก์ชันเหล่านี้ยังคงทำงานได้ชั่วคราวโดยใช้ ScriptProperties
+// เพื่อไม่ให้โค้ดเก่าเสีย แต่แนะนำให้ใช้ Client-Side Session
+
+/**
+ * @deprecated ใช้ Client-Side Session แทน
+ * ฟังก์ชันนี้ยังทำงานได้ชั่วคราวเพื่อ Backward Compatibility
+ */
+function setSession(userId, username, role) {
+  try {
+    const scriptProperties = PropertiesService.getScriptProperties();
+    const sessionData = {
+      userId: userId,
+      username: username,
+      role: role,
+      loginTime: new Date().getTime(),
+    };
+    // ใช้ username เป็น key เพื่อรองรับหลาย session
+    scriptProperties.setProperty(
+      "session_" + username,
+      JSON.stringify(sessionData)
+    );
+  } catch (error) {
+    Logger.log("setSession error: " + error.message);
+  }
+}
+
+/**
+ * @deprecated ใช้ validateSession(sessionToken) แทน
+ * ฟังก์ชันนี้ยังทำงานได้ชั่วคราวเพื่อ Backward Compatibility
  */
 function getSession() {
-  const userProperties = PropertiesService.getUserProperties();
-  const sessionString = userProperties.getProperty("session");
-  if (!sessionString) return null;
-  return JSON.parse(sessionString);
+  try {
+    const scriptProperties = PropertiesService.getScriptProperties();
+    const allProperties = scriptProperties.getProperties();
+
+    // หา session ที่ใหม่ที่สุด
+    let latestSession = null;
+    let latestTime = 0;
+
+    for (let key in allProperties) {
+      if (key.startsWith("session_")) {
+        try {
+          const sessionData = JSON.parse(allProperties[key]);
+          if (sessionData.loginTime > latestTime) {
+            latestTime = sessionData.loginTime;
+            latestSession = sessionData;
+          }
+        } catch (e) {
+          // Skip invalid session
+        }
+      }
+    }
+
+    return latestSession;
+  } catch (error) {
+    Logger.log("getSession error: " + error.message);
+    return null;
+  }
 }
 
 /**
- * Clear User Session
+ * @deprecated ใช้ Client-Side Session แทน
+ * ฟังก์ชันนี้ยังทำงานได้ชั่วคราวเพื่อ Backward Compatibility
  */
 function clearSession() {
-  PropertiesService.getUserProperties().deleteProperty("session");
+  try {
+    const scriptProperties = PropertiesService.getScriptProperties();
+    const allProperties = scriptProperties.getProperties();
+
+    // ลบ session ทั้งหมด
+    for (let key in allProperties) {
+      if (key.startsWith("session_")) {
+        scriptProperties.deleteProperty(key);
+      }
+    }
+  } catch (error) {
+    Logger.log("clearSession error: " + error.message);
+  }
 }
 
 /**
- * Check if User is Logged In
+ * @deprecated ใช้ validateSession(sessionToken) แทน
+ * ฟังก์ชันนี้ยังทำงานได้ชั่วคราวเพื่อ Backward Compatibility
  */
 function isLoggedIn() {
   return getSession() !== null;
 }
 
 /**
- * Check User Role
+ * @deprecated ใช้ hasRoleWithToken(sessionToken, requiredRole) แทน
+ * ฟังก์ชันนี้ยังทำงานได้ชั่วคราวเพื่อ Backward Compatibility
  */
 function hasRole(requiredRole) {
   const session = getSession();
@@ -195,14 +413,21 @@ function loginUser(username, password) {
       const role = row[5]; // Column F: บทบาท
       const status = row[6]; // Column G: สถานะการใช้งาน
 
-      if (dbUsername === username && status === "Active") {
+      if (dbUsername === username && status === "เปิดใช้งาน") {
         const hashedPassword = hashPassword(password);
         if (dbPassword === hashedPassword) {
           const userId = row[0]; // Column A: รหัสผู้ใช้
+
+          // สร้าง Session Token สำหรับ Client-Side
+          const sessionToken = createSessionToken(userId, username, role);
+
+          // ตั้งค่า Session แบบเก่าด้วย (สำหรับ Backward Compatibility)
           setSession(userId, username, role);
+
           return {
             success: true,
             message: "เข้าสู่ระบบสำเร็จ",
+            sessionToken: sessionToken, // ส่ง Token ที่ root level
             data: {
               userId: userId,
               username: username,
@@ -228,9 +453,9 @@ function loginUser(username, password) {
 
 /**
  * Logout User
+ * (Client จะลบ Session Token เอง)
  */
 function logoutUser() {
-  clearSession();
   return {
     success: true,
     message: "ออกจากระบบสำเร็จ",
@@ -238,14 +463,14 @@ function logoutUser() {
 }
 
 /**
- * Get Current User Info
+ * Get Current User Info (รับ sessionToken จาก Client)
  */
-function getCurrentUser() {
-  const session = getSession();
+function getCurrentUser(sessionToken) {
+  const session = validateSession(sessionToken);
   if (!session) {
     return {
       success: false,
-      message: "ไม่พบข้อมูลผู้ใช้",
+      message: "ไม่พบข้อมูลผู้ใช้หรือ Session หมดอายุ",
     };
   }
 
@@ -298,11 +523,11 @@ function setupInitialOwner() {
     const ownerRow = [
       userId,
       "owner@example.com",
-      "admin",
+      "owner",
       hashedPassword,
-      "ผู้ดูแลระบบ",
+      "เจ้าของ",
       "Owner",
-      "Active",
+      "เปิดใช้งาน",
       timestamp,
       timestamp,
     ];
@@ -310,12 +535,12 @@ function setupInitialOwner() {
     sheet.appendRow(ownerRow);
 
     Logger.log("สร้าง Owner สำเร็จ!");
-    Logger.log("Username: admin");
+    Logger.log("Username: owner");
     Logger.log("Password: password123");
 
     return {
       success: true,
-      message: "สร้าง Owner สำเร็จ!\nUsername: admin\nPassword: password123",
+      message: "สร้าง Owner สำเร็จ!\nUsername: owner\nPassword: password123",
       data: {
         username: "admin",
         password: "password123",
@@ -409,7 +634,6 @@ function setupAllSheets() {
     if (programsSheet.getLastRow() === 0) {
       programsSheet.appendRow([
         "รหัสโปรแกรม",
-        "ชื่อโปรแกรม",
         "รายละเอียด",
         "ราคาผู้ใหญ่",
         "ราคาเด็ก",
@@ -461,7 +685,9 @@ function debugLogin() {
 
     // 1. ตรวจสอบ Spreadsheet ID
     Logger.log("1. Spreadsheet ID: " + CONFIG.SPREADSHEET_ID);
-    if (CONFIG.SPREADSHEET_ID === "YOUR_SPREADSHEET_ID_HERE") {
+    if (
+      CONFIG.SPREADSHEET_ID === "1VHWoJ3UyBTUWLXVRBZFu4iURzRZY_H3HDQRRJfqfq8k"
+    ) {
       Logger.log("❌ ERROR: คุณยังไม่ได้ใส่ SPREADSHEET_ID ใน Code.gs");
       return {
         success: false,
@@ -538,6 +764,175 @@ function debugLogin() {
   }
 }
 
+/**
+ * ทดสอบ Login โดยตรง (สำหรับ Debug)
+ * รันฟังก์ชันนี้เพื่อทดสอบการ Login ด้วย username และ password
+ */
+function testLogin() {
+  Logger.log("=== ทดสอบการ Login ===");
+
+  const username = "admin";
+  const password = "password123";
+
+  Logger.log("Username: " + username);
+  Logger.log("Password: " + password);
+
+  const result = loginUser(username, password);
+
+  Logger.log("=== ผลการทดสอบ Login ===");
+  Logger.log(JSON.stringify(result, null, 2));
+
+  if (result.success) {
+    Logger.log("✅ Login สำเร็จ!");
+  } else {
+    Logger.log("❌ Login ไม่สำเร็จ: " + result.message);
+  }
+
+  return result;
+}
+
+/**
+ * ตรวจสอบข้อมูล User ทั้งหมดในระบบ
+ * รันฟังก์ชันนี้เพื่อดูข้อมูล User ทั้งหมดที่มีใน Sheet
+ */
+function checkAllUsers() {
+  try {
+    Logger.log("=== ตรวจสอบข้อมูล User ทั้งหมด ===");
+
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+    const data = sheet.getDataRange().getValues();
+
+    Logger.log("จำนวนแถวทั้งหมด: " + data.length);
+    Logger.log("");
+
+    // แสดง Header
+    Logger.log("Header (แถวที่ 1):");
+    Logger.log(JSON.stringify(data[0]));
+    Logger.log("");
+
+    // แสดงข้อมูล User
+    for (let i = 1; i < data.length; i++) {
+      Logger.log(`แถวที่ ${i + 1}:`);
+      Logger.log(`  A (รหัสผู้ใช้): ${data[i][0]}`);
+      Logger.log(`  B (อีเมล): ${data[i][1]}`);
+      Logger.log(`  C (ชื่อผู้ใช้): ${data[i][2]}`);
+      Logger.log(`  D (รหัสผ่าน): ${data[i][3]}`);
+      Logger.log(`  E (ชื่อ-นามสกุล): ${data[i][4]}`);
+      Logger.log(`  F (บทบาท): ${data[i][5]}`);
+      Logger.log(`  G (สถานะ): ${data[i][6]}`);
+      Logger.log(`  H (วันที่สร้าง): ${data[i][7]}`);
+      Logger.log(`  I (วันที่แก้ไข): ${data[i][8]}`);
+      Logger.log("");
+    }
+
+    return {
+      success: true,
+      totalRows: data.length,
+      totalUsers: data.length - 1,
+      data: data,
+    };
+  } catch (error) {
+    Logger.log("❌ ERROR: " + error.message);
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
+}
+
+/**
+ * ทดสอบ Session Management
+ * รันฟังก์ชันนี้เพื่อทดสอบการทำงานของ Session
+ */
+function testSession() {
+  Logger.log("=== ทดสอบ Session ===");
+
+  // 1. ลบ Session เดิม (ถ้ามี)
+  clearSession();
+  Logger.log("1. ลบ Session เดิม");
+
+  // 2. ตรวจสอบว่าไม่มี Session
+  let session = getSession();
+  Logger.log("2. Session หลังลบ: " + JSON.stringify(session));
+  Logger.log("   Is Logged In: " + isLoggedIn());
+
+  // 3. ตั้งค่า Session ใหม่
+  setSession("USR001", "admin", "Owner");
+  Logger.log("3. ตั้งค่า Session ใหม่");
+
+  // 4. อ่าน Session
+  session = getSession();
+  Logger.log("4. Session หลังตั้งค่า: " + JSON.stringify(session));
+  Logger.log("   Is Logged In: " + isLoggedIn());
+
+  // 5. ทดสอบ hasRole
+  Logger.log("5. ทดสอบ hasRole:");
+  Logger.log("   hasRole('Owner'): " + hasRole(CONFIG.ROLES.OWNER));
+  Logger.log("   hasRole('Sales'): " + hasRole(CONFIG.ROLES.SALES));
+  Logger.log(
+    "   hasRole(['OP', 'Owner']): " +
+      hasRole([CONFIG.ROLES.OP, CONFIG.ROLES.OWNER])
+  );
+
+  // 6. ลบ Session
+  clearSession();
+  Logger.log("6. ลบ Session");
+
+  session = getSession();
+  Logger.log("7. Session หลังลบ: " + JSON.stringify(session));
+  Logger.log("   Is Logged In: " + isLoggedIn());
+
+  return {
+    success: true,
+    message: "ทดสอบ Session เสร็จสิ้น",
+  };
+}
+
+/**
+ * ตรวจสอบ Password Hash
+ * รันฟังก์ชันนี้เพื่อดู Hash ของรหัสผ่านที่ถูกต้อง
+ */
+function verifyPasswordHash() {
+  Logger.log("=== ตรวจสอบ Password Hash ===");
+
+  const password = "password123";
+  const correctHash =
+    "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
+
+  const generatedHash = hashPassword(password);
+
+  Logger.log("Password: " + password);
+  Logger.log("Hash ที่ถูกต้อง: " + correctHash);
+  Logger.log("Hash ที่สร้างขึ้น: " + generatedHash);
+  Logger.log("ตรงกันหรือไม่: " + (correctHash === generatedHash));
+
+  // ทดสอบกับข้อมูลใน Sheet
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+    const data = sheet.getDataRange().getValues();
+
+    if (data.length > 1) {
+      const dbHash = data[1][3]; // Password hash ของ User แรก
+      Logger.log("");
+      Logger.log("Hash ใน Database: " + dbHash);
+      Logger.log("ตรงกับ Hash ที่ถูกต้องหรือไม่: " + (dbHash === correctHash));
+      Logger.log(
+        "ตรงกับ Hash ที่สร้างขึ้นหรือไม่: " + (dbHash === generatedHash)
+      );
+    }
+  } catch (error) {
+    Logger.log("ไม่สามารถอ่านข้อมูลจาก Sheet ได้: " + error.message);
+  }
+
+  return {
+    success: true,
+    password: password,
+    correctHash: correctHash,
+    generatedHash: generatedHash,
+    isMatch: correctHash === generatedHash,
+  };
+}
+
 // ========================================
 // USER MANAGEMENT (Owner Only)
 // ========================================
@@ -606,7 +1001,7 @@ function createUser(userData) {
       hashedPassword, // D: รหัสผ่าน
       userData.fullName, // E: ชื่อ-นามสกุล
       userData.role, // F: บทบาท
-      "Active", // G: สถานะการใช้งาน
+      "เปิดใช้งาน", // G: สถานะการใช้งาน
       timestamp, // H: วันที่สร้าง
       timestamp, // I: วันที่แก้ไขล่าสุด
     ];
@@ -715,7 +1110,7 @@ function deleteUser(userId) {
         }
 
         const timestamp = getCurrentTimestamp();
-        sheet.getRange(i + 1, 7).setValue("Inactive");
+        sheet.getRange(i + 1, 7).setValue("ปิดใช้งาน");
         sheet.getRange(i + 1, 9).setValue(timestamp);
 
         return { success: true, message: "ลบพนักงานสำเร็จ" };
@@ -1033,18 +1428,21 @@ function getAllLocations() {
   try {
     const sheet = getSheet(CONFIG.SHEETS.LOCATIONS);
     const data = sheet.getDataRange().getValues();
-    const locations = [];
 
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      locations.push({
-        locationId: row[0],
-        locationName: row[1],
-        cellName: row[2],
-        createdAt: row[3],
-        updatedAt: row[4],
-      });
-    }
+    const locations = data
+      .slice(1)
+      .filter((row) => row[0]) // Ensure locationId exists
+      .map((row) => ({
+        locationId: String(row[0] || ""),
+        locationName: String(row[1] || ""),
+        cellName: String(row[2] || ""),
+        isActive:
+          row[3] === "เปิดใช้งาน" || row[3] === true || row[3] === "Active",
+        createdAt:
+          row[4] instanceof Date ? row[4].toISOString() : String(row[4] || ""),
+        updatedAt:
+          row[5] instanceof Date ? row[5].toISOString() : String(row[5] || ""),
+      }));
 
     return { success: true, data: locations };
   } catch (error) {
@@ -1069,6 +1467,7 @@ function createLocation(locationData) {
       locationId,
       locationData.locationName,
       locationData.cellName || "",
+      "เปิดใช้งาน", // Default status
       timestamp,
       timestamp,
     ];
@@ -1085,6 +1484,121 @@ function createLocation(locationData) {
   }
 }
 
+/**
+ * Update Location (Admin/Owner)
+ */
+function updateLocation(locationId, locationData) {
+  if (!hasRole([CONFIG.ROLES.ADMIN, CONFIG.ROLES.OWNER])) {
+    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
+  }
+
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.LOCATIONS);
+    const data = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(locationId).trim()) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลสถานที่" };
+    }
+
+    const timestamp = getCurrentTimestamp();
+    sheet.getRange(rowIndex, 2).setValue(locationData.locationName);
+    sheet.getRange(rowIndex, 3).setValue(locationData.cellName || "");
+    sheet.getRange(rowIndex, 4).setValue(locationData.status || "เปิดใช้งาน");
+    sheet.getRange(rowIndex, 6).setValue(timestamp);
+
+    return { success: true, message: "แก้ไขสถานที่สำเร็จ" };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Toggle Location Status (Admin/Owner)
+ */
+function toggleLocationStatus(locationId) {
+  if (!hasRole([CONFIG.ROLES.ADMIN, CONFIG.ROLES.OWNER])) {
+    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
+  }
+
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.LOCATIONS);
+    const data = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+    let currentIsActive = false;
+
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(locationId).trim()) {
+        rowIndex = i + 1;
+        currentIsActive =
+          data[i][3] === "เปิดใช้งาน" ||
+          data[i][3] === true ||
+          data[i][3] === "Active";
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลสถานที่" };
+    }
+
+    const newStatus = currentIsActive ? "ปิดใช้งาน" : "เปิดใช้งาน";
+    const timestamp = getCurrentTimestamp();
+
+    sheet.getRange(rowIndex, 4).setValue(newStatus);
+    sheet.getRange(rowIndex, 6).setValue(timestamp);
+
+    return {
+      success: true,
+      message: `เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`,
+    };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Delete Location (Admin/Owner) - Actually deactivates the location
+ */
+function deleteLocation(locationId) {
+  if (!hasRole([CONFIG.ROLES.ADMIN, CONFIG.ROLES.OWNER])) {
+    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
+  }
+
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.LOCATIONS);
+    const data = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(locationId).trim()) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลสถานที่" };
+    }
+
+    // Instead of deleting, update status to "ปิดใช้งาน"
+    const timestamp = getCurrentTimestamp();
+    sheet.getRange(rowIndex, 4).setValue("ปิดใช้งาน");
+    sheet.getRange(rowIndex, 6).setValue(timestamp);
+
+    return { success: true, message: "ปิดการใช้งานสถานที่สำเร็จ" };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
 // ========================================
 // PROGRAMS MANAGEMENT
 // ========================================
@@ -1095,20 +1609,31 @@ function createLocation(locationData) {
 function getAllPrograms() {
   try {
     const sheet = getSheet(CONFIG.SHEETS.PROGRAMS);
+    if (!sheet) {
+      return {
+        success: false,
+        message: "ไม่พบ Sheet Programs กรุณารัน setupAllSheets หนึ่งครั้ง",
+      };
+    }
     const data = sheet.getDataRange().getValues();
     const programs = [];
 
+    // Header: รหัสโปรแกรม0, รายละเอียด1, ราคาผู้ใหญ่2, ราคาเด็ก3, สถานะการใช้งาน4, วันที่สร้าง5, วันที่แก้ไขล่าสุด6
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
+      if (!row[0]) continue;
+
       programs.push({
-        programId: row[0],
-        programName: row[1],
-        description: row[2],
-        adultPrice: row[3],
-        childPrice: row[4],
-        isActive: row[5],
-        createdAt: row[6],
-        updatedAt: row[7],
+        programId: String(row[0] || ""),
+        description: String(row[1] || ""),
+        adultPrice: parseFloat(row[2]) || 0,
+        childPrice: parseFloat(row[3]) || 0,
+        isActive:
+          row[4] === "เปิดใช้งาน" || row[4] === true || row[4] === "Active",
+        createdAt:
+          row[5] instanceof Date ? row[5].toISOString() : String(row[5] || ""),
+        updatedAt:
+          row[6] instanceof Date ? row[6].toISOString() : String(row[6] || ""),
       });
     }
 
@@ -1128,16 +1653,27 @@ function createProgram(programData) {
 
   try {
     const sheet = getSheet(CONFIG.SHEETS.PROGRAMS);
-    const programId = generateUniqueId("PRG");
-    const timestamp = getCurrentTimestamp();
+    if (!sheet) {
+      return { success: false, message: "ไม่พบ Sheet Programs" };
+    }
 
+    const data = sheet.getDataRange().getValues();
+    const programId = String(programData.programId).trim();
+
+    // Check for duplicate ID
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === programId) {
+        return { success: false, message: "รหัสโปรแกรมนี้มีอยู่แล้วในระบบ" };
+      }
+    }
+
+    const timestamp = getCurrentTimestamp();
     const newRow = [
       programId,
-      programData.programName,
       programData.description || "",
       programData.adultPrice,
       programData.childPrice,
-      true, // isActive
+      programData.isActive ? "เปิดใช้งาน" : "ปิดใช้งาน",
       timestamp,
       timestamp,
     ];
@@ -1148,6 +1684,144 @@ function createProgram(programData) {
       success: true,
       message: "เพิ่มโปรแกรมสำเร็จ",
       data: { programId: programId },
+    };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Update Program (Owner Only)
+ */
+function updateProgram(oldId, programData) {
+  if (!hasRole(CONFIG.ROLES.OWNER)) {
+    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
+  }
+
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.PROGRAMS);
+    if (!sheet) {
+      return { success: false, message: "ไม่พบ Sheet Programs" };
+    }
+    const data = sheet.getDataRange().getValues();
+    const newId = String(programData.programId).trim();
+    let rowIndex = -1;
+
+    // Find current row and check for duplicate of NEW ID (if changed)
+    for (let i = 1; i < data.length; i++) {
+      const currentIdInSheet = String(data[i][0]).trim();
+
+      // Find the record we want to update
+      if (currentIdInSheet === oldId) {
+        rowIndex = i + 1;
+      }
+
+      // Check if the NEW ID already exists (and is not the one we are currently editing)
+      if (newId !== oldId && currentIdInSheet === newId) {
+        return {
+          success: false,
+          message: "รหัสโปรแกรมใหม่ขัดแย้งกับโปรแกรมอื่นที่มีอยู่แล้ว",
+        };
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลโปรแกรมเดิม" };
+    }
+
+    const timestamp = getCurrentTimestamp();
+    sheet.getRange(rowIndex, 1).setValue(newId);
+    sheet.getRange(rowIndex, 2).setValue(programData.description || "");
+    sheet.getRange(rowIndex, 3).setValue(programData.adultPrice);
+    sheet.getRange(rowIndex, 4).setValue(programData.childPrice);
+    sheet
+      .getRange(rowIndex, 5)
+      .setValue(programData.isActive ? "เปิดใช้งาน" : "ปิดใช้งาน");
+    sheet.getRange(rowIndex, 7).setValue(timestamp);
+
+    return { success: true, message: "แก้ไขโปรแกรมสำเร็จ" };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Delete Program (Soft Delete - Owner Only)
+ */
+function deleteProgram(programId) {
+  if (!hasRole(CONFIG.ROLES.OWNER)) {
+    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
+  }
+
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.PROGRAMS);
+    if (!sheet) {
+      return { success: false, message: "ไม่พบ Sheet Programs" };
+    }
+    const data = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === programId) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลโปรแกรม" };
+    }
+
+    const timestamp = getCurrentTimestamp();
+    sheet.getRange(rowIndex, 5).setValue("ปิดใช้งาน");
+    sheet.getRange(rowIndex, 7).setValue(timestamp);
+
+    return {
+      success: true,
+      message: "ลบโปรแกรมสำเร็จ (เปลี่ยนสถานะเป็นปิดใช้งาน)",
+    };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Toggle Program Status (Owner Only)
+ */
+function toggleProgramStatus(programId) {
+  if (!hasRole(CONFIG.ROLES.OWNER)) {
+    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
+  }
+
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.PROGRAMS);
+    if (!sheet) return { success: false, message: "ไม่พบ Sheet Programs" };
+
+    const data = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+    let currentIsActive = false;
+
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(programId).trim()) {
+        rowIndex = i + 1;
+        currentIsActive = data[i][4] === "เปิดใช้งาน";
+        break;
+      }
+    }
+
+    if (rowIndex === -1)
+      return { success: false, message: "ไม่พบข้อมูลโปรแกรม" };
+
+    const newStatus = currentIsActive ? "ปิดใช้งาน" : "เปิดใช้งาน";
+    const timestamp = getCurrentTimestamp();
+
+    sheet.getRange(rowIndex, 5).setValue(newStatus);
+    sheet.getRange(rowIndex, 7).setValue(timestamp);
+
+    return {
+      success: true,
+      message: `เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`,
+      data: { isActive: !currentIsActive },
     };
   } catch (error) {
     return { success: false, message: error.message };
@@ -1267,26 +1941,385 @@ function getDashboardData() {
 }
 
 // ========================================
-// HTML TEMPLATE FUNCTIONS
+// USER MANAGEMENT (Owner Only)
 // ========================================
 
 /**
- * Include HTML file (for templating)
+ * Get All Users (Owner only)
  */
-function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+function getAllUsers(sessionToken) {
+  try {
+    // Validate session and check Owner role
+    const session = validateSession(sessionToken);
+
+    if (!session) {
+      return {
+        success: false,
+        message: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
+      };
+    }
+
+    // Check if user is Owner
+    if (session.role !== "Owner") {
+      return {
+        success: false,
+        message: `คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้ (Role: ${session.role})`,
+      };
+    }
+
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+
+    if (!sheet) {
+      return {
+        success: false,
+        message: "ไม่พบ Sheet Users",
+      };
+    }
+
+    const data = sheet.getDataRange().getValues();
+
+    const users = [];
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (row[0]) {
+        // Convert to plain strings for JSON serialization
+        users.push({
+          userId: String(row[0] || ""),
+          email: String(row[1] || ""),
+          username: String(row[2] || ""),
+          fullName: String(row[4] || ""),
+          role: String(row[5] || ""),
+          status: String(row[6] || ""),
+          createdAt: row[7] ? String(row[7]) : "",
+          updatedAt: row[8] ? String(row[8]) : "",
+        });
+      }
+    }
+
+    return {
+      success: true,
+      data: users,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
 }
 
-// ========================================
-// WEB APP ENTRY POINT
-// ========================================
+/**
+ * Create New User (Owner only)
+ */
+function createUser(sessionToken, userData) {
+  try {
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session || session.role !== CONFIG.ROLES.OWNER) {
+      return { success: false, message: "คุณไม่มีสิทธิ์ดำเนินการนี้" };
+    }
+
+    // Validate required fields
+    if (
+      !userData.fullName ||
+      !userData.email ||
+      !userData.username ||
+      !userData.role
+    ) {
+      return { success: false, message: "กรุณากรอกข้อมูลให้ครบถ้วน" };
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userData.email)) {
+      return { success: false, message: "รูปแบบอีเมลไม่ถูกต้อง" };
+    }
+
+    // Validate role
+    const validRoles = ["Sale", "OP", "Admin", "AR_AP", "Cost", "Owner"];
+    if (!validRoles.includes(userData.role)) {
+      return { success: false, message: "ตำแหน่งไม่ถูกต้อง" };
+    }
+
+    // Check duplicate email and username
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][1] === userData.email) {
+        return { success: false, message: "อีเมลนี้ถูกใช้งานแล้ว" };
+      }
+      if (data[i][2] === userData.username) {
+        return { success: false, message: "ชื่อผู้ใช้นี้ถูกใช้งานแล้ว" };
+      }
+    }
+
+    // Generate user ID
+    const userId = generateUserId();
+
+    // Default password
+    const defaultPassword = "password123";
+    const hashedPassword = hashPassword(defaultPassword);
+
+    // Prepare data
+    const now = getCurrentTimestamp();
+    const newRow = [
+      userId,
+      userData.email,
+      userData.username,
+      hashedPassword,
+      userData.fullName,
+      userData.role,
+      "เปิดใช้งาน",
+      now,
+      now,
+    ];
+
+    // Append to sheet
+    sheet.appendRow(newRow);
+
+    return {
+      success: true,
+      message: "เพิ่มพนักงานสำเร็จ",
+      data: { userId: userId },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
+}
 
 /**
- * Serve HTML Pages
+ * Update User (Owner only)
  */
-function doGet(e) {
-  return HtmlService.createTemplateFromFile("index")
-    .evaluate()
-    .setTitle("Booking Control System")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+function updateUser(sessionToken, userId, userData) {
+  try {
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session || session.role !== CONFIG.ROLES.OWNER) {
+      return { success: false, message: "คุณไม่มีสิทธิ์ดำเนินการนี้" };
+    }
+
+    // Validate required fields
+    if (
+      !userData.fullName ||
+      !userData.email ||
+      !userData.username ||
+      !userData.role
+    ) {
+      return { success: false, message: "กรุณากรอกข้อมูลให้ครบถ้วน" };
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userData.email)) {
+      return { success: false, message: "รูปแบบอีเมลไม่ถูกต้อง" };
+    }
+
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+    const data = sheet.getDataRange().getValues();
+
+    // Find user
+    let rowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === userId) {
+        rowIndex = i + 1; // Sheet row is 1-indexed
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลพนักงาน" };
+    }
+
+    // Check duplicate email and username (exclude current user)
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] !== userId) {
+        if (data[i][1] === userData.email) {
+          return { success: false, message: "อีเมลนี้ถูกใช้งานแล้ว" };
+        }
+        if (data[i][2] === userData.username) {
+          return { success: false, message: "ชื่อผู้ใช้นี้ถูกใช้งานแล้ว" };
+        }
+      }
+    }
+
+    // Update data
+    sheet.getRange(rowIndex, 2).setValue(userData.email);
+    sheet.getRange(rowIndex, 3).setValue(userData.username);
+    sheet.getRange(rowIndex, 5).setValue(userData.fullName);
+    sheet.getRange(rowIndex, 6).setValue(userData.role);
+    sheet.getRange(rowIndex, 7).setValue(userData.status);
+    sheet.getRange(rowIndex, 9).setValue(getCurrentTimestamp());
+
+    return {
+      success: true,
+      message: "แก้ไขข้อมูลสำเร็จ",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
+}
+
+/**
+ * Delete User (Soft delete - Owner only)
+ */
+function deleteUser(sessionToken, userId) {
+  try {
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session || session.role !== CONFIG.ROLES.OWNER) {
+      return { success: false, message: "คุณไม่มีสิทธิ์ดำเนินการนี้" };
+    }
+
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+    const data = sheet.getDataRange().getValues();
+
+    // Find user
+    let rowIndex = -1;
+    let userRole = null;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === userId) {
+        rowIndex = i + 1;
+        userRole = data[i][5];
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลพนักงาน" };
+    }
+
+    // Prevent deleting Owner
+    if (userRole === CONFIG.ROLES.OWNER) {
+      return { success: false, message: "ไม่สามารถลบ Owner ได้" };
+    }
+
+    // Soft delete - change status to Inactive
+    sheet.getRange(rowIndex, 7).setValue("ปิดใช้งาน");
+    sheet.getRange(rowIndex, 9).setValue(getCurrentTimestamp());
+
+    return {
+      success: true,
+      message: "ลบพนักงานสำเร็จ",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
+}
+
+/**
+ * Reset User Password (Owner only)
+ */
+function resetUserPassword(sessionToken, userId) {
+  try {
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session || session.role !== CONFIG.ROLES.OWNER) {
+      return { success: false, message: "คุณไม่มีสิทธิ์ดำเนินการนี้" };
+    }
+
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+    const data = sheet.getDataRange().getValues();
+
+    // Find user
+    let rowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === userId) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลพนักงาน" };
+    }
+
+    // Reset password to default
+    const defaultPassword = "password123";
+    const hashedPassword = hashPassword(defaultPassword);
+
+    sheet.getRange(rowIndex, 4).setValue(hashedPassword);
+    sheet.getRange(rowIndex, 9).setValue(getCurrentTimestamp());
+
+    return {
+      success: true,
+      message: "รีเซ็ตรหัสผ่านสำเร็จ",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
+}
+
+/**
+ * Toggle User Status (Owner only)
+ */
+function toggleUserStatus(sessionToken, userId) {
+  if (!hasRoleWithToken(sessionToken, CONFIG.ROLES.OWNER)) {
+    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
+  }
+
+  try {
+    const sheet = getSheet(CONFIG.SHEETS.USERS);
+    if (!sheet) return { success: false, message: "ไม่พบ Sheet Users" };
+
+    const data = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+    let currentIsActive = false;
+
+    // Skip header (row 1)
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(userId).trim()) {
+        rowIndex = i + 1;
+        currentIsActive = data[i][6] === "เปิดใช้งาน";
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return { success: false, message: "ไม่พบข้อมูลผู้ใช้" };
+    }
+
+    const newStatus = currentIsActive ? "ปิดใช้งาน" : "เปิดใช้งาน";
+    const timestamp = getCurrentTimestamp();
+
+    // Column 7 is Status, Column 9 is Updated At
+    sheet.getRange(rowIndex, 7).setValue(newStatus);
+    sheet.getRange(rowIndex, 9).setValue(timestamp);
+
+    return {
+      success: true,
+      message: `เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`,
+      data: { isActive: !currentIsActive },
+    };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Generate User ID
+ */
+function generateUserId() {
+  const sheet = getSheet(CONFIG.SHEETS.USERS);
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow === 1) {
+    return "USR001";
+  }
+
+  const lastId = sheet.getRange(lastRow, 1).getValue();
+  const number = parseInt(lastId.replace("USR", "")) + 1;
+  return "USR" + number.toString().padStart(3, "0");
 }

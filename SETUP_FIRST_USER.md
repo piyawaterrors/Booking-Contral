@@ -58,6 +58,7 @@ function setupInitialOwner() {
     // Check if sheet is empty (only header or no data)
     const data = sheet.getDataRange().getValues();
     if (data.length > 1) {
+      Logger.log("มี User อยู่ในระบบแล้ว");
       return {
         success: false,
         message: "มี User อยู่ในระบบแล้ว ไม่สามารถสร้าง Owner ใหม่ได้",
@@ -88,22 +89,31 @@ function setupInitialOwner() {
     const ownerRow = [
       userId,
       "owner@example.com",
-      "admin",
+      "owner",
       hashedPassword,
-      "ผู้ดูแลระบบ",
+      "เจ้าของ",
       "Owner",
-      "Active",
+      "เปิดใช้งาน",
       timestamp,
       timestamp,
     ];
 
     sheet.appendRow(ownerRow);
 
+    Logger.log("สร้าง Owner สำเร็จ!");
+    Logger.log("Username: owner");
+    Logger.log("Password: password123");
+
     return {
       success: true,
-      message: "สร้าง Owner สำเร็จ!\nUsername: admin\nPassword: password123",
+      message: "สร้าง Owner สำเร็จ!\nUsername: owner\nPassword: password123",
+      data: {
+        username: "admin",
+        password: "password123",
+      },
     };
   } catch (error) {
+    Logger.log("Error: " + error.message);
     return {
       success: false,
       message: "เกิดข้อผิดพลาด: " + error.message,

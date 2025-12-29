@@ -1,208 +1,314 @@
-<!-- Dashboard Page Content -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+<!-- Dashboard Page - Modern Design -->
+<div class="space-y-6">
   <!-- Stats Cards -->
-  <div class="bg-white rounded-lg shadow p-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-sm text-gray-600">ยอดขายวันนี้</p>
-        <p class="text-2xl font-bold text-gray-800 mt-2" id="salesToday">฿0</p>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Today's Bookings -->
+    <div
+      class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all duration-300 card-hover"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">การจองวันนี้</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2" id="todayBookings">
+            0
+          </p>
+          <p class="text-xs text-green-600 mt-1">
+            <span class="inline-flex items-center">
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              +12% จากเมื่อวาน
+            </span>
+          </p>
+        </div>
+        <div
+          class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center"
+        >
+          <svg
+            class="w-8 h-8 text-purple-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            ></path>
+          </svg>
+        </div>
       </div>
-      <div
-        class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center"
+    </div>
+
+    <!-- This Month Revenue -->
+    <div
+      class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all duration-300 card-hover"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">รายได้เดือนนี้</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2" id="monthRevenue">
+            ฿0
+          </p>
+          <p class="text-xs text-green-600 mt-1">
+            <span class="inline-flex items-center">
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              +8% จากเดือนที่แล้ว
+            </span>
+          </p>
+        </div>
+        <div
+          class="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center"
+        >
+          <svg
+            class="w-8 h-8 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Approvals -->
+    <div
+      class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition-all duration-300 card-hover"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">รออนุมัติ</p>
+          <p
+            class="text-3xl font-bold text-gray-900 mt-2"
+            id="pendingApprovals"
+          >
+            0
+          </p>
+          <p class="text-xs text-orange-600 mt-1">
+            <span class="inline-flex items-center">
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              ต้องดำเนินการ
+            </span>
+          </p>
+        </div>
+        <div
+          class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center"
+        >
+          <svg
+            class="w-8 h-8 text-orange-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Programs -->
+    <div
+      class="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all duration-300 card-hover"
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">โปรแกรมที่เปิดใช้</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2" id="activePrograms">
+            0
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            <span class="inline-flex items-center">
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              พร้อมให้บริการ
+            </span>
+          </p>
+        </div>
+        <div
+          class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center"
+        >
+          <svg
+            class="w-8 h-8 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activities -->
+  <div class="bg-white rounded-2xl shadow-lg p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-gray-800">กิจกรรมล่าสุด</h3>
+      <a
+        href="#"
+        onclick="navigateTo('booking')"
+        class="text-sm font-medium text-purple-600 hover:text-purple-700"
       >
+        ดูทั้งหมด →
+      </a>
+    </div>
+
+    <div class="space-y-4" id="recentActivities">
+      <!-- Loading State -->
+      <div class="text-center py-8 text-gray-400">
         <svg
-          class="w-6 h-6 text-green-600"
+          class="animate-spin h-8 w-8 mx-auto mb-2"
           fill="none"
-          stroke="currentColor"
           viewBox="0 0 24 24"
         >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
           <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
           ></path>
         </svg>
+        <p class="text-sm">กำลังโหลดข้อมูล...</p>
       </div>
-    </div>
-  </div>
-
-  <div class="bg-white rounded-lg shadow p-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-sm text-gray-600">ยอดขายเดือนนี้</p>
-        <p class="text-2xl font-bold text-gray-800 mt-2" id="salesThisMonth">
-          ฿0
-        </p>
-      </div>
-      <div
-        class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center"
-      >
-        <svg
-          class="w-6 h-6 text-blue-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          ></path>
-        </svg>
-      </div>
-    </div>
-  </div>
-
-  <div class="bg-white rounded-lg shadow p-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-sm text-gray-600">ยอดค้างรับ</p>
-        <p class="text-2xl font-bold text-gray-800 mt-2" id="pendingAmount">
-          ฿0
-        </p>
-      </div>
-      <div
-        class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center"
-      >
-        <svg
-          class="w-6 h-6 text-yellow-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          ></path>
-        </svg>
-      </div>
-    </div>
-  </div>
-
-  <div class="bg-white rounded-lg shadow p-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-sm text-gray-600">Cancel Rate</p>
-        <p class="text-2xl font-bold text-gray-800 mt-2" id="cancelRate">0%</p>
-      </div>
-      <div
-        class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center"
-      >
-        <svg
-          class="w-6 h-6 text-red-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          ></path>
-        </svg>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Charts Section -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  <div class="bg-white rounded-lg shadow p-6">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 5 Programs</h3>
-    <div id="topProgramsChart" class="space-y-3">
-      <p class="text-gray-500 text-sm">กำลังโหลดข้อมูล...</p>
-    </div>
-  </div>
-
-  <div class="bg-white rounded-lg shadow p-6">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4">ยอดขายตาม Agent</h3>
-    <div id="agentSalesChart" class="space-y-3">
-      <p class="text-gray-500 text-sm">กำลังโหลดข้อมูล...</p>
     </div>
   </div>
 </div>
 
 <script>
-  // ========================================
-  // DASHBOARD PAGE FUNCTIONS
-  // ========================================
-
   /**
    * Load Dashboard Data
    */
   function loadDashboard() {
-    google.script.run
-      .withSuccessHandler(function (response) {
-        if (response.success) {
-          const data = response.data;
+    console.log("Loading dashboard...");
 
-          // Update stats
-          document.getElementById("salesToday").textContent =
-            "฿" + data.salesToday.toLocaleString();
-          document.getElementById("salesThisMonth").textContent =
-            "฿" + data.salesThisMonth.toLocaleString();
-          document.getElementById("pendingAmount").textContent =
-            "฿" + data.pendingAmount.toLocaleString();
-          document.getElementById("cancelRate").textContent =
-            data.cancelRate + "%";
+    // Demo data
+    setTimeout(() => {
+      document.getElementById("todayBookings").textContent = "12";
+      document.getElementById("monthRevenue").textContent = "฿245,000";
+      document.getElementById("pendingApprovals").textContent = "3";
+      document.getElementById("activePrograms").textContent = "8";
 
-          // Update top programs chart
-          if (data.topPrograms && data.topPrograms.length > 0) {
-            const topProgramsHTML = data.topPrograms
-              .map(
-                (program) => `
-              <div class="mb-3">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-sm text-gray-700">${program.name}</span>
-                  <span class="text-sm font-semibold text-gray-900">฿${program.amount.toLocaleString()}</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="bg-gradient-to-r from-purple-500 to-indigo-600 h-2 rounded-full" style="width: ${
-                    (program.amount / data.topPrograms[0].amount) * 100
-                  }%"></div>
-                </div>
-              </div>
-            `
-              )
-              .join("");
-            document.getElementById("topProgramsChart").innerHTML =
-              topProgramsHTML;
-          } else {
-            document.getElementById("topProgramsChart").innerHTML =
-              '<p class="text-gray-500 text-sm">ไม่มีข้อมูล</p>';
-          }
+      loadRecentActivities();
+    }, 500);
+  }
 
-          // Update agent sales chart
-          if (data.salesByAgent && Object.keys(data.salesByAgent).length > 0) {
-            const agentSalesHTML = Object.entries(data.salesByAgent)
-              .map(
-                ([agent, amount]) => `
-              <div class="flex items-center justify-between py-2 border-b border-gray-100">
-                <span class="text-sm text-gray-700">${agent}</span>
-                <span class="text-sm font-semibold text-gray-900">฿${amount.toLocaleString()}</span>
-              </div>
-            `
-              )
-              .join("");
-            document.getElementById("agentSalesChart").innerHTML =
-              agentSalesHTML;
-          } else {
-            document.getElementById("agentSalesChart").innerHTML =
-              '<p class="text-gray-500 text-sm">ไม่มีข้อมูล</p>';
-          }
-        }
-      })
-      .withFailureHandler(function (error) {
-        showToast(
-          "ไม่สามารถโหลดข้อมูล Dashboard ได้: " + error.message,
-          "error"
-        );
-      })
-      .getDashboardData();
+  /**
+   * Load Recent Activities
+   */
+  function loadRecentActivities() {
+    const container = document.getElementById("recentActivities");
+
+    const activities = [
+      {
+        id: "BK2025001",
+        type: "new_booking",
+        customer: "นายสมชาย ใจดี",
+        program: "เกาะสมุย 3 วัน 2 คืน",
+        status: "Pending",
+        time: "5 นาทีที่แล้ว",
+      },
+      {
+        id: "BK2025002",
+        type: "confirmed",
+        customer: "นางสาวสมหญิง รักดี",
+        program: "ภูเก็ต 4 วัน 3 คืน",
+        status: "Confirmed",
+        time: "15 นาทีที่แล้ว",
+      },
+      {
+        id: "BK2024999",
+        type: "completed",
+        customer: "นายสมศักดิ์ มีสุข",
+        program: "เชียงใหม่ 2 วัน 1 คืน",
+        status: "Complete",
+        time: "1 ชั่วโมงที่แล้ว",
+      },
+    ];
+
+    const statusColors = {
+      Pending: "bg-orange-100 text-orange-800",
+      Confirmed: "bg-blue-100 text-blue-800",
+      Complete: "bg-green-100 text-green-800",
+      Cancel: "bg-red-100 text-red-800",
+    };
+
+    const icons = {
+      new_booking: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>`,
+      confirmed: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>`,
+      completed: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>`,
+    };
+
+    container.innerHTML = activities
+      .map(
+        (activity) => `
+      <div class="flex items-start space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${icons[activity.type]}
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-gray-900">การจอง #${
+            activity.id
+          }</p>
+          <p class="text-sm text-gray-500">ลูกค้า: ${
+            activity.customer
+          } - โปรแกรม: ${activity.program}</p>
+          <p class="text-xs text-gray-400 mt-1">${activity.time}</p>
+        </div>
+        <span class="px-3 py-1 text-xs font-semibold ${
+          statusColors[activity.status]
+        } rounded-full">
+          ${activity.status}
+        </span>
+      </div>
+    `
+      )
+      .join("");
   }
 </script>
