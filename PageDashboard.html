@@ -1,0 +1,208 @@
+<!-- Dashboard Page Content -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+  <!-- Stats Cards -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">ยอดขายวันนี้</p>
+        <p class="text-2xl font-bold text-gray-800 mt-2" id="salesToday">฿0</p>
+      </div>
+      <div
+        class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center"
+      >
+        <svg
+          class="w-6 h-6 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">ยอดขายเดือนนี้</p>
+        <p class="text-2xl font-bold text-gray-800 mt-2" id="salesThisMonth">
+          ฿0
+        </p>
+      </div>
+      <div
+        class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center"
+      >
+        <svg
+          class="w-6 h-6 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">ยอดค้างรับ</p>
+        <p class="text-2xl font-bold text-gray-800 mt-2" id="pendingAmount">
+          ฿0
+        </p>
+      </div>
+      <div
+        class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center"
+      >
+        <svg
+          class="w-6 h-6 text-yellow-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600">Cancel Rate</p>
+        <p class="text-2xl font-bold text-gray-800 mt-2" id="cancelRate">0%</p>
+      </div>
+      <div
+        class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center"
+      >
+        <svg
+          class="w-6 h-6 text-red-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 5 Programs</h3>
+    <div id="topProgramsChart" class="space-y-3">
+      <p class="text-gray-500 text-sm">กำลังโหลดข้อมูล...</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">ยอดขายตาม Agent</h3>
+    <div id="agentSalesChart" class="space-y-3">
+      <p class="text-gray-500 text-sm">กำลังโหลดข้อมูล...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ========================================
+  // DASHBOARD PAGE FUNCTIONS
+  // ========================================
+
+  /**
+   * Load Dashboard Data
+   */
+  function loadDashboard() {
+    google.script.run
+      .withSuccessHandler(function (response) {
+        if (response.success) {
+          const data = response.data;
+
+          // Update stats
+          document.getElementById("salesToday").textContent =
+            "฿" + data.salesToday.toLocaleString();
+          document.getElementById("salesThisMonth").textContent =
+            "฿" + data.salesThisMonth.toLocaleString();
+          document.getElementById("pendingAmount").textContent =
+            "฿" + data.pendingAmount.toLocaleString();
+          document.getElementById("cancelRate").textContent =
+            data.cancelRate + "%";
+
+          // Update top programs chart
+          if (data.topPrograms && data.topPrograms.length > 0) {
+            const topProgramsHTML = data.topPrograms
+              .map(
+                (program) => `
+              <div class="mb-3">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm text-gray-700">${program.name}</span>
+                  <span class="text-sm font-semibold text-gray-900">฿${program.amount.toLocaleString()}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-gradient-to-r from-purple-500 to-indigo-600 h-2 rounded-full" style="width: ${
+                    (program.amount / data.topPrograms[0].amount) * 100
+                  }%"></div>
+                </div>
+              </div>
+            `
+              )
+              .join("");
+            document.getElementById("topProgramsChart").innerHTML =
+              topProgramsHTML;
+          } else {
+            document.getElementById("topProgramsChart").innerHTML =
+              '<p class="text-gray-500 text-sm">ไม่มีข้อมูล</p>';
+          }
+
+          // Update agent sales chart
+          if (data.salesByAgent && Object.keys(data.salesByAgent).length > 0) {
+            const agentSalesHTML = Object.entries(data.salesByAgent)
+              .map(
+                ([agent, amount]) => `
+              <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                <span class="text-sm text-gray-700">${agent}</span>
+                <span class="text-sm font-semibold text-gray-900">฿${amount.toLocaleString()}</span>
+              </div>
+            `
+              )
+              .join("");
+            document.getElementById("agentSalesChart").innerHTML =
+              agentSalesHTML;
+          } else {
+            document.getElementById("agentSalesChart").innerHTML =
+              '<p class="text-gray-500 text-sm">ไม่มีข้อมูล</p>';
+          }
+        }
+      })
+      .withFailureHandler(function (error) {
+        showToast(
+          "ไม่สามารถโหลดข้อมูล Dashboard ได้: " + error.message,
+          "error"
+        );
+      })
+      .getDashboardData();
+  }
+</script>
