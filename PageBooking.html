@@ -58,7 +58,7 @@
       >
         <option value="">ทุกสถานะ</option>
         <option value="Confirm">Confirm</option>
-        <option value="Complete">Complete</option>
+        <option value="Completed">Completed</option>
         <option value="Cancel">Cancel</option>
       </select>
 
@@ -126,17 +126,7 @@
           <th
             class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
           >
-            สถานที่
-          </th>
-          <th
-            class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
-          >
-            โปรแกรม
-          </th>
-          <th
-            class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
-          >
-            จำนวนคน
+            สถานที่/โปรแกรม
           </th>
           <th
             class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider"
@@ -151,6 +141,16 @@
           <th
             class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
           >
+            สลิป
+          </th>
+          <th
+            class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
+          >
+            เอกสาร
+          </th>
+          <th
+            class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
+          >
             จัดการ
           </th>
         </tr>
@@ -158,11 +158,13 @@
       <tbody id="bookingTableBody" class="divide-y divide-gray-100">
         <tr>
           <td colspan="9" class="px-6 py-12 text-center text-gray-400">
-            <div class="flex flex-col items-center space-y-3">
+            <div class="flex flex-col items-center justify-center space-y-3">
               <div
-                class="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"
+                class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"
               ></div>
-              <span>กำลังดึงข้อมูลการจอง...</span>
+              <p class="text-gray-400 text-sm font-medium animate-pulse">
+                กำลังดึงข้อมูลการจอง...
+              </p>
             </div>
           </td>
         </tr>
@@ -175,12 +177,21 @@
     id="bookingGridBody"
     class="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4"
   >
-    <!-- Mobile cards will be rendered here -->
+    <div class="col-span-full py-12 text-center">
+      <div class="flex flex-col items-center justify-center space-y-3">
+        <div
+          class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"
+        ></div>
+        <p class="text-gray-400 text-sm font-medium animate-pulse">
+          กำลังดึงข้อมูลการจอง...
+        </p>
+      </div>
+    </div>
   </div>
 
   <!-- Pagination Controls -->
   <div
-    class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 gap-4 mt-4"
+    class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white px-6 py-4 rounded-2xl shadow-sm border border-gray-100 mt-4"
     id="bookingPaginationControl"
   >
     <!-- Rows per page -->
@@ -295,42 +306,20 @@
 <!-- Create/Edit Booking Modal -->
 <div
   id="bookingModal"
-  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-300"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm"
 >
   <div
     id="bookingModalContent"
-    class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0"
+    class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden"
   >
     <!-- Modal Header -->
-    <div
-      class="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 p-6 flex items-center justify-between border-b border-purple-500 z-10"
-    >
-      <div class="flex items-center space-x-3">
-        <div
-          class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            ></path>
-          </svg>
-        </div>
-        <div class="flex flex-col">
-          <h3 class="text-xl font-bold text-white" id="modalTitle">
-            สร้างการจองใหม่
-          </h3>
-          <p id="modalSubtitle" class="text-indigo-100 text-sm hidden"></p>
-        </div>
-      </div>
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 relative">
+      <h3 class="text-2xl font-bold text-white" id="modalTitle">
+        สร้างการจองใหม่
+      </h3>
+      <p id="modalSubtitle" class="text-purple-100 text-sm mt-1 hidden"></p>
       <button
+        type="button"
         onclick="closeBookingModal()"
         class="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
       >
@@ -350,369 +339,182 @@
       </button>
     </div>
 
-    <!-- Modal Body -->
-    <form id="bookingForm" class="p-6">
-      <input type="hidden" id="bookingId" />
-      <input type="hidden" id="editMode" value="false" />
+    <!-- Form Content -->
+    <div class="overflow-y-auto max-h-[calc(90vh-180px)]">
+      <form id="bookingForm" class="p-6">
+        <input type="hidden" id="bookingId" />
+        <input type="hidden" id="editMode" value="false" />
 
-      <!-- Grid Layout -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- วันที่จอง -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >วันที่จอง <span class="text-red-500">*</span></label
-          >
-          <input type="date" id="bookingDate" required class="input-modern" />
-        </div>
-
-        <!-- วันที่เดินทาง -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >วันที่เดินทาง <span class="text-red-500">*</span></label
-          >
-          <input type="date" id="travelDate" required class="input-modern" />
-        </div>
-
-        <!-- สถานที่ -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >สถานที่ <span class="text-red-500">*</span></label
-          >
-          <select id="location" required class="input-modern select-modern">
-            <option value="">เลือกสถานที่</option>
-          </select>
-        </div>
-
-        <!-- โปรแกรม -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >โปรแกรม <span class="text-red-500">*</span></label
-          >
-          <select
-            id="program"
-            required
-            class="input-modern select-modern"
-            onchange="updatePrices()"
-          >
-            <option value="">เลือกโปรแกรม</option>
-          </select>
-        </div>
-
-        <!-- ผู้ใหญ่ -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >ผู้ใหญ่ (คน) <span class="text-red-500">*</span></label
-          >
-          <input
-            type="number"
-            id="adults"
-            min="0"
-            value="0"
-            required
-            class="input-modern"
-            onchange="calculateTotal()"
-          />
-        </div>
-
-        <!-- เด็ก -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >เด็ก (คน)</label
-          >
-          <input
-            type="number"
-            id="children"
-            min="0"
-            value="0"
-            class="input-modern"
-            onchange="calculateTotal()"
-          />
-        </div>
-
-        <!-- ราคาผู้ใหญ่ -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >ราคาผู้ใหญ่ (บาท) <span class="text-red-500">*</span></label
-          >
-          <input
-            type="number"
-            id="adultPrice"
-            min="0"
-            value="0"
-            required
-            readonly
-            class="input-modern"
-            onchange="calculateTotal()"
-          />
-        </div>
-
-        <!-- ราคาเด็ก -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >ราคาเด็ก (บาท)</label
-          >
-          <input
-            type="number"
-            id="childPrice"
-            min="0"
-            value="0"
-            class="input-modern"
-            readonly
-            onchange="calculateTotal()"
-          />
-        </div>
-
-        <!-- ส่วนลด -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >ส่วนลด (บาท)</label
-          >
-          <input
-            type="number"
-            id="discount"
-            min="0"
-            value="0"
-            class="input-modern"
-            onchange="calculateTotal()"
-          />
-        </div>
-
-        <!-- Agent -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >Agent/ช่องทาง</label
-          >
-          <input
-            type="text"
-            id="agent"
-            placeholder="ระบุ Agent หรือช่องทาง"
-            class="input-modern"
-          />
-        </div>
-
-        <!-- หมายเหตุ -->
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >หมายเหตุ</label
-          >
-          <textarea
-            id="notes"
-            rows="3"
-            placeholder="หมายเหตุเพิ่มเติม..."
-            class="input-modern"
-          ></textarea>
-        </div>
-
-        <!-- อัพโหลดสลิปการชำระเงิน -->
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            สลิปการชำระเงิน
-          </label>
-          <div
-            class="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-purple-400 transition-all"
-          >
-            <input
-              type="file"
-              id="slipFile"
-              accept="image/*,.pdf"
-              class="hidden"
-              onchange="handleSlipFileSelect(event)"
-            />
-            <div
-              id="slipUploadArea"
-              class="text-center cursor-pointer"
-              onclick="document.getElementById('slipFile').click()"
+        <!-- Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- วันที่จอง -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >วันที่จอง <span class="text-red-500">*</span></label
             >
-              <svg
-                class="w-12 h-12 mx-auto text-gray-400 mb-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                ></path>
-              </svg>
-              <p class="text-sm text-gray-600 mb-1">
-                <span class="text-purple-600 font-semibold"
-                  >คลิกเพื่ออัพโหลด</span
-                >
-                หรือลากไฟล์มาวาง
-              </p>
-              <p class="text-xs text-gray-500">
-                รองรับไฟล์ภาพ (JPG, PNG) หรือ PDF (ขนาดไม่เกิน 5MB)
-              </p>
-            </div>
-            <div id="slipPreview" class="hidden mt-4">
-              <div
-                class="flex items-center justify-between bg-gray-50 rounded-lg p-3"
-              >
-                <div class="flex items-center space-x-3">
-                  <svg
-                    class="w-8 h-8 text-green-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                  <div>
-                    <p
-                      class="text-sm font-semibold text-gray-700"
-                      id="slipFileName"
-                    >
-                      -
-                    </p>
-                    <p class="text-xs text-gray-500" id="slipFileSize">-</p>
-                  </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <a
-                    id="slipViewLink"
-                    href="#"
-                    target="_blank"
-                    class="text-purple-600 hover:text-purple-800 p-1 hidden"
-                    title="ดูสลิป"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      ></path>
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      ></path>
-                    </svg>
-                  </a>
-                  <button
-                    type="button"
-                    onclick="clearSlipFile()"
-                    class="text-red-500 hover:text-red-700 p-1"
-                    title="ลบ"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                      ></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <input type="date" id="bookingDate" required class="input-modern" />
           </div>
-          <input type="hidden" id="slipUrl" />
-        </div>
 
-        <!-- ยอดรวม (แสดงผล) -->
-        <div class="md:col-span-2">
-          <div
-            class="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-6 shadow-sm"
-          >
-            <!-- Calculation Breakdown -->
-            <div class="space-y-3 mb-4">
-              <div class="flex items-center justify-between text-sm">
-                <div class="flex items-center space-x-2">
-                  <svg
-                    class="w-4 h-4 text-purple-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    ></path>
-                  </svg>
-                  <span class="text-gray-600 font-medium" id="adultSummary"
-                    >ผู้ใหญ่: 0 คน × 0 ฿</span
-                  >
-                </div>
-                <span class="font-bold text-gray-900" id="adultTotal">0 ฿</span>
-              </div>
+          <!-- วันที่เดินทาง -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >วันที่เดินทาง <span class="text-red-500">*</span></label
+            >
+            <input type="date" id="travelDate" required class="input-modern" />
+          </div>
 
-              <div class="flex items-center justify-between text-sm">
-                <div class="flex items-center space-x-2">
-                  <svg
-                    class="w-4 h-4 text-indigo-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                  <span class="text-gray-600 font-medium" id="childSummary"
-                    >เด็ก: 0 คน × 0 ฿</span
-                  >
-                </div>
-                <span class="font-bold text-gray-900" id="childTotal">0 ฿</span>
-              </div>
+          <!-- สถานที่ -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >สถานที่ <span class="text-red-500">*</span></label
+            >
+            <select id="location" required class="input-modern select-modern">
+              <option value="">เลือกสถานที่</option>
+            </select>
+          </div>
 
+          <!-- โปรแกรม -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >โปรแกรม <span class="text-red-500">*</span></label
+            >
+            <select
+              id="program"
+              required
+              class="input-modern select-modern"
+              onchange="updatePrices()"
+            >
+              <option value="">เลือกโปรแกรม</option>
+            </select>
+          </div>
+
+          <!-- ผู้ใหญ่ -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >ผู้ใหญ่ (คน) <span class="text-red-500">*</span></label
+            >
+            <input
+              type="number"
+              id="adults"
+              min="0"
+              value="0"
+              required
+              class="input-modern"
+              onchange="calculateTotal()"
+            />
+          </div>
+
+          <!-- เด็ก -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >เด็ก (คน)</label
+            >
+            <input
+              type="number"
+              id="children"
+              min="0"
+              value="0"
+              class="input-modern"
+              onchange="calculateTotal()"
+            />
+          </div>
+
+          <!-- ราคาผู้ใหญ่ -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >ราคาผู้ใหญ่ (บาท) <span class="text-red-500">*</span></label
+            >
+            <input
+              type="number"
+              id="adultPrice"
+              min="0"
+              value="0"
+              required
+              readonly
+              class="input-modern"
+              onchange="calculateTotal()"
+            />
+          </div>
+
+          <!-- ราคาเด็ก -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >ราคาเด็ก (บาท)</label
+            >
+            <input
+              type="number"
+              id="childPrice"
+              min="0"
+              value="0"
+              class="input-modern"
+              readonly
+              onchange="calculateTotal()"
+            />
+          </div>
+
+          <!-- ส่วนลด -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >ส่วนลด (บาท)</label
+            >
+            <input
+              type="number"
+              id="discount"
+              min="0"
+              value="0"
+              class="input-modern"
+              onchange="calculateTotal()"
+            />
+          </div>
+
+          <!-- Agent -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Agent</label
+            >
+            <input
+              type="text"
+              id="agent"
+              placeholder="ระบุ Agen"
+              class="input-modern"
+            />
+          </div>
+
+          <!-- หมายเหตุ -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >หมายเหตุ</label
+            >
+            <textarea
+              id="notes"
+              rows="3"
+              placeholder="หมายเหตุเพิ่มเติม..."
+              class="input-modern"
+            ></textarea>
+          </div>
+
+          <!-- อัพโหลดสลิปการชำระเงิน -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              สลิปการชำระเงิน
+            </label>
+            <div
+              class="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-purple-400 transition-all"
+            >
+              <input
+                type="file"
+                id="slipFile"
+                accept="image/*,.pdf"
+                class="hidden"
+                onchange="handleSlipFileSelect(event)"
+              />
               <div
-                class="flex items-center justify-between text-sm"
-                id="discountRow"
+                id="slipUploadArea"
+                class="text-center cursor-pointer"
+                onclick="document.getElementById('slipFile').click()"
               >
-                <div class="flex items-center space-x-2">
-                  <svg
-                    class="w-4 h-4 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    ></path>
-                  </svg>
-                  <span class="text-gray-600 font-medium">ส่วนลด</span>
-                </div>
-                <span class="font-bold text-red-600" id="discountAmount"
-                  >- 0 ฿</span
-                >
-              </div>
-
-              <div class="border-t-2 border-purple-300 pt-3 mt-2"></div>
-            </div>
-
-            <!-- Total Amount -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2">
                 <svg
-                  class="w-6 h-6 text-purple-600"
+                  class="w-12 h-12 mx-auto text-gray-400 mb-3"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -721,90 +523,262 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                   ></path>
                 </svg>
-                <span class="text-xl font-bold text-gray-800"
-                  >ยอดรวมทั้งหมด</span
+                <p class="text-sm text-gray-600 mb-1">
+                  <span class="text-purple-600 font-semibold"
+                    >คลิกเพื่ออัพโหลด</span
+                  >
+                  หรือลากไฟล์มาวาง
+                </p>
+                <p class="text-xs text-gray-500">
+                  รองรับไฟล์ภาพ (JPG, PNG) หรือ PDF (ขนาดไม่เกิน 5MB)
+                </p>
+              </div>
+              <div id="slipPreview" class="hidden mt-4">
+                <div
+                  class="flex items-center justify-between bg-gray-50 rounded-lg p-3"
+                >
+                  <div class="flex items-center space-x-3">
+                    <svg
+                      class="w-8 h-8 text-green-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <div>
+                      <p
+                        class="text-sm font-semibold text-gray-700"
+                        id="slipFileName"
+                      >
+                        -
+                      </p>
+                      <p class="text-xs text-gray-500" id="slipFileSize">-</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <a
+                      id="slipViewLink"
+                      href="#"
+                      target="_blank"
+                      class="text-purple-600 hover:text-purple-800 p-1 hidden"
+                      title="ดูสลิป"
+                    >
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        ></path>
+                      </svg>
+                    </a>
+                    <button
+                      type="button"
+                      onclick="clearSlipFile()"
+                      class="text-red-500 hover:text-red-700 p-1"
+                      title="ลบ"
+                    >
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="slipUrl" />
+          </div>
+
+          <!-- ยอดรวม (แสดงผล) -->
+          <div class="md:col-span-2">
+            <div
+              class="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-6 shadow-sm"
+            >
+              <!-- Calculation Breakdown -->
+              <div class="space-y-3 mb-4">
+                <div class="flex items-center justify-between text-sm">
+                  <div class="flex items-center space-x-2">
+                    <svg
+                      class="w-4 h-4 text-purple-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      ></path>
+                    </svg>
+                    <span class="text-gray-600 font-medium" id="adultSummary"
+                      >ผู้ใหญ่: 0 คน × 0 ฿</span
+                    >
+                  </div>
+                  <span class="font-bold text-gray-900" id="adultTotal"
+                    >0 ฿</span
+                  >
+                </div>
+
+                <div class="flex items-center justify-between text-sm">
+                  <div class="flex items-center space-x-2">
+                    <svg
+                      class="w-4 h-4 text-indigo-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span class="text-gray-600 font-medium" id="childSummary"
+                      >เด็ก: 0 คน × 0 ฿</span
+                    >
+                  </div>
+                  <span class="font-bold text-gray-900" id="childTotal"
+                    >0 ฿</span
+                  >
+                </div>
+
+                <div
+                  class="flex items-center justify-between text-sm"
+                  id="discountRow"
+                >
+                  <div class="flex items-center space-x-2">
+                    <svg
+                      class="w-4 h-4 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      ></path>
+                    </svg>
+                    <span class="text-gray-600 font-medium">ส่วนลด</span>
+                  </div>
+                  <span class="font-bold text-red-600" id="discountAmount"
+                    >- 0 ฿</span
+                  >
+                </div>
+
+                <div class="border-t-2 border-purple-300 pt-3 mt-2"></div>
+              </div>
+
+              <!-- Total Amount -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <svg
+                    class="w-6 h-6 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                  <span class="text-xl font-bold text-gray-800"
+                    >ยอดรวมทั้งหมด</span
+                  >
+                </div>
+                <span
+                  class="text-3xl font-bold text-purple-600"
+                  id="totalAmount"
+                  >0 ฿</span
                 >
               </div>
-              <span class="text-3xl font-bold text-purple-600" id="totalAmount"
-                >0 ฿</span
-              >
             </div>
           </div>
         </div>
-      </div>
+      </form>
+    </div>
 
-      <!-- Modal Footer -->
-      <div class="flex justify-end space-x-3 mt-6 pt-6 border-t">
-        <button
-          type="button"
-          id="cancelBookingBtn"
-          onclick="closeBookingModal()"
-          class="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          ยกเลิก
-        </button>
-        <button
-          type="submit"
-          id="saveBookingBtn"
-          class="btn-primary px-6 py-2 text-white rounded-lg flex items-center space-x-2"
-        >
-          <span
-            id="saveBtnSpinner"
-            class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-          ></span>
-          <span id="saveBtnText">บันทึก</span>
-        </button>
-      </div>
-    </form>
+    <!-- Action Buttons -->
+    <div
+      class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t border-gray-200"
+    >
+      <button
+        type="button"
+        id="cancelBookingBtn"
+        onclick="closeBookingModal()"
+        class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+      >
+        ยกเลิก
+      </button>
+      <button
+        type="submit"
+        form="bookingForm"
+        id="saveBookingBtn"
+        class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:shadow-lg active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center space-x-2"
+      >
+        <span
+          id="saveBtnSpinner"
+          class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
+        <span id="saveBtnText">บันทึก</span>
+      </button>
+    </div>
   </div>
 </div>
 
 <!-- View Booking Details Modal -->
 <div
   id="viewBookingModal"
-  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-300"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm"
 >
   <div
     id="viewBookingModalContent"
-    class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0"
+    class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden"
   >
     <!-- Modal Header -->
-    <div
-      class="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 flex items-center justify-between border-b border-indigo-500 z-10"
-    >
-      <div class="flex items-center space-x-3">
-        <div
-          class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            ></path>
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            ></path>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-xl font-bold text-white">รายละเอียดการจอง</h3>
-          <p class="text-indigo-100 text-sm" id="viewBookingId">-</p>
-        </div>
-      </div>
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 relative">
+      <h3 class="text-2xl font-bold text-white" id="viewBookingModalTitle">
+        รายละเอียดการจอง
+      </h3>
+      <p class="text-purple-100 text-sm mt-1" id="viewBookingId">-</p>
       <button
+        type="button"
         onclick="closeViewBookingModal()"
         class="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
       >
@@ -825,8 +799,10 @@
     </div>
 
     <!-- Modal Body -->
-    <div class="p-6" id="viewBookingContent">
-      <!-- Content will be populated by JavaScript -->
+    <div class="overflow-y-auto max-h-[calc(90vh-140px)]">
+      <div id="viewBookingContent" class="p-6">
+        <!-- Content will be populated by JavaScript -->
+      </div>
     </div>
   </div>
 </div>
@@ -834,10 +810,10 @@
 <!-- Delete Confirmation Modal -->
 <div
   id="deleteModal"
-  class="hidden fixed inset-0 bg-black bg-opacity-50 z-[70] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 z-[70] flex items-center justify-center backdrop-blur-sm"
 >
   <div
-    class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all scale-95 opacity-0"
+    class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden"
     id="deleteModalContent"
   >
     <!-- Header (Employee Style) -->
@@ -913,6 +889,111 @@
   </div>
 </div>
 
+<!-- Invoice Preview Modal -->
+<div
+  id="invoicePreviewModal"
+  class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 transition-all duration-300 backdrop-blur-sm bg-black/60"
+>
+  <div
+    id="invoicePreviewContent"
+    class="bg-white rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden"
+  >
+    <!-- Modal Header -->
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 relative">
+      <div class="flex flex-col">
+        <h3 class="text-2xl font-bold text-white">ตัวอย่างเอกสาร</h3>
+        <p id="previewBookingId" class="text-purple-100 text-sm mt-1">#...</p>
+      </div>
+      <button
+        type="button"
+        onclick="closeInvoicePreview()"
+        class="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div
+      class="bg-gray-50 border-b px-6 py-3 flex items-center justify-end space-x-3"
+    >
+      <button
+        onclick="openInNewTab()"
+        id="newTabBtn"
+        class="flex items-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:text-purple-600 hover:border-purple-200 transition-all font-medium active:scale-95 shadow-sm"
+        title="เปิดเอกสารในแท็บใหม่"
+      >
+        <svg
+          class="w-5 h-5 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+          ></path>
+        </svg>
+        เปิดในแท็บใหม่
+      </button>
+      <button
+        id="downloadInvoiceBtn"
+        class="flex items-center px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-medium active:scale-95 shadow-lg shadow-purple-200"
+      >
+        <svg
+          class="w-5 h-5 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          ></path>
+        </svg>
+        Download PDF
+      </button>
+    </div>
+
+    <!-- Container -->
+    <div class="flex-1 overflow-hidden bg-gray-100 p-4 min-h-[500px] relative">
+      <div
+        id="pdfLoadingState"
+        class="absolute inset-0 flex items-center justify-center bg-white/80 z-10 hidden"
+      >
+        <div class="flex flex-col items-center space-y-3">
+          <div
+            class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"
+          ></div>
+          <p class="text-gray-400 text-sm font-medium animate-pulse">
+            กำลังเตรียมเอกสาร...
+          </p>
+        </div>
+      </div>
+      <iframe
+        id="pdfIframe"
+        class="w-full h-full rounded-xl shadow-inner bg-white border border-gray-200"
+        frameborder="0"
+      ></iframe>
+    </div>
+  </div>
+</div>
 <script>
   let deletingBookingId = null;
 
@@ -924,25 +1005,27 @@
     document.getElementById("deleteReasonError").classList.add("hidden");
 
     const modal = document.getElementById("deleteModal");
-    const content = document.getElementById("deleteModalContent");
+    const modalContent = document.getElementById("deleteModalContent");
 
     modal.classList.remove("hidden");
-    // Animation
+    modal.classList.add("modal-show");
+
     setTimeout(() => {
-      content.classList.remove("scale-95", "opacity-0");
-      content.classList.add("scale-100", "opacity-100");
+      modalContent.classList.add("modal-content-show");
     }, 10);
   }
 
   function closeBookingDeleteModal() {
     const modal = document.getElementById("deleteModal");
-    const content = document.getElementById("deleteModalContent");
+    const modalContent = document.getElementById("deleteModalContent");
 
-    content.classList.remove("scale-100", "opacity-100");
-    content.classList.add("scale-95", "opacity-0");
+    modal.classList.add("modal-hide");
+    modalContent.classList.add("modal-content-hide");
 
     setTimeout(() => {
       modal.classList.add("hidden");
+      modal.classList.remove("modal-show", "modal-hide");
+      modalContent.classList.remove("modal-content-show", "modal-content-hide");
       deletingBookingId = null;
     }, 300);
   }
@@ -960,14 +1043,15 @@
     const btn = document.getElementById("btnConfirmDelete");
     const spinner = document.getElementById("deleteSpinner");
     const btnCancel = document.getElementById("btnCancelDelete");
-    const btnText = btn.querySelector("span");
 
     // Loading State
     btn.disabled = true;
     btnCancel.disabled = true;
     spinner.classList.remove("hidden");
-    const originalText = btnText.textContent;
-    btnText.textContent = "กำลังลบ...";
+    btn.innerHTML = `
+      <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+      <span>กำลังลบ...</span>
+    `;
 
     const session = getSessionFromStorage();
 
@@ -976,8 +1060,10 @@
         // Reset State
         btn.disabled = false;
         btnCancel.disabled = false;
-        spinner.classList.add("hidden");
-        btnText.textContent = originalText;
+        btn.innerHTML = `
+          <span id="deleteSpinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          <span>ยืนยันการลบ</span>
+        `;
 
         closeBookingDeleteModal();
 
@@ -992,8 +1078,10 @@
         // Reset State
         btn.disabled = false;
         btnCancel.disabled = false;
-        spinner.classList.add("hidden");
-        btnText.textContent = originalText;
+        btn.innerHTML = `
+          <span id="deleteSpinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          <span>ยืนยันการลบ</span>
+        `;
 
         closeBookingDeleteModal();
         showToast("เกิดข้อผิดพลาด: " + error.message, "error");
@@ -1041,6 +1129,15 @@
       </tr>
     `;
 
+    document.getElementById("bookingGridBody").innerHTML = `
+      <div class="col-span-full py-12 text-center">
+        <div class="flex flex-col items-center justify-center space-y-3">
+          <div class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"></div>
+          <p class="text-gray-400 text-sm font-medium animate-pulse">กำลังดึงข้อมูลการจอง...</p>
+        </div>
+      </div>
+    `;
+
     // Load locations and programs first
     Promise.all([
       new Promise((resolve) => {
@@ -1068,7 +1165,8 @@
         .withSuccessHandler(function (response) {
           if (response.success) {
             allBookings = response.data || [];
-            renderBookings(allBookings);
+            currentFilteredBookings = allBookings;
+            renderBookingPagination();
           } else {
             showToast(response.message || "ไม่สามารถโหลดข้อมูลได้", "error");
             document.getElementById("bookingTableBody").innerHTML = `
@@ -1098,8 +1196,9 @@
    * Get Program Name from Program ID
    */
   function getProgramName(programId) {
+    if (!programId) return "-";
     const program = allPrograms.find((p) => p.programId === programId);
-    return program ? program.description : programId; // ถ้าไม่เจอให้แสดง ID
+    return program ? program.description : programId;
   }
 
   /**
@@ -1127,66 +1226,74 @@
           const isCancelled = booking.status === "Cancel";
           const canEdit =
             !isCancelled &&
+            currentSession &&
             (currentSession.role === "Owner" ||
               booking.createdBy === currentSession.username);
 
           return `
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-4 py-3 text-sm font-medium text-gray-900">${
-                booking.bookingId
-              }</td>
-              <td class="px-4 py-3 text-sm text-gray-600">${formatDateDisplay(
+            <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="viewBooking('${
+              booking.bookingId || ""
+            }')">
+              <td class="px-6 py-4">
+                <div class="text-sm font-bold text-gray-900">${
+                  booking.bookingId
+                }</div>
+                <div class="text-xs text-gray-500">โดย: ${
+                  booking.createdBy
+                }</div>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-700">${
                 booking.bookingDate
-              )}</td>
-              <td class="px-4 py-3 text-sm text-gray-600">${formatDateDisplay(
+              }</td>
+              <td class="px-6 py-4 text-sm text-gray-700">${
                 booking.travelDate
-              )}</td>
-              <td class="px-4 py-3 text-sm text-gray-600">${
-                booking.location
               }</td>
-              <td class="px-4 py-3 text-sm text-gray-600">${
-                booking.program
-              }</td>
-  
-              <td class="px-4 py-3 text-sm text-gray-600">${totalPeople} คน</td>
-              <td class="px-4 py-3 text-sm font-semibold text-gray-900">${formatNumber(
-                booking.totalAmount
-              )} ฿</td>
-              <td class="px-4 py-3">${statusBadge}</td>
-              <td class="px-4 py-3 text-center">
-                <div class="flex items-center justify-center space-x-2">
-                  <button
-                    onclick="viewBooking('${booking.bookingId}')"
-                    class="p-2 text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 rounded-xl transition-all duration-200 shadow-sm bg-white"
-                    title="ดูรายละเอียด"
-                  >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                    </svg>
-                  </button>
+              <td class="px-6 py-4">
+                <div class="text-sm font-medium text-gray-900">${
+                  booking.location
+                }</div>
+                <div class="text-xs text-gray-500">${
+                  booking.program
+                }</div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="text-sm font-bold text-gray-900">${formatNumber(
+                  booking.totalAmount
+                )} ฿</div>
+                <div class="text-xs text-gray-500">${booking.adults} ผู้ใหญ่, ${
+            booking.children
+          } เด็ก</div>
+              </td>
+              <td class="px-6 py-4 text-center">
+                ${statusBadge}
+              </td>
+              <td class="px-6 py-4 text-center">
+                ${
+                  booking.slipUrl
+                    ? `<a href="${booking.slipUrl}" target="_blank" onclick="event.stopPropagation()" class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></a>`
+                    : '<span class="text-gray-400">-</span>'
+                }
+              </td>
+              <td class="px-6 py-4 text-center">
+                ${
+                  booking.status === "Cancel"
+                    ? '<span class="text-gray-400">-</span>'
+                    : booking.status === "Completed"
+                    ? `<button onclick="event.stopPropagation(); viewReceipt('${booking.bookingId}')" class="inline-flex items-center px-3 py-1 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-all font-medium text-sm" title="ดูใบเสร็จรับเงิน">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        ใบเสร็จ
+                      </button>`
+                    : `<button onclick="event.stopPropagation(); viewInvoice('${booking.bookingId}')" class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all font-medium text-sm" title="ดูใบแจ้งหนี้">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        ใบแจ้งหนี้
+                      </button>`
+                }
+              </td>
+              <td class="px-6 py-4 text-center">
+                <div class="flex items-center justify-center space-x-1" onclick="event.stopPropagation()">
                   ${
                     canEdit
-                      ? `
-                    <button
-                      onclick="editBooking('${booking.bookingId}')"
-                      class="p-2 text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-xl transition-all duration-200 shadow-sm bg-white"
-                      title="แก้ไข"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                      </svg>
-                    </button>
-                    <button
-                      onclick="deleteBooking('${booking.bookingId}')"
-                      class="p-2 text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-xl transition-all duration-200 shadow-sm bg-white"
-                      title="ลบ"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                    </button>
-                  `
+                      ? `<button onclick="editBooking('${booking.bookingId}')" class="p-2 text-indigo-600 hover:bg-indigo-50 border border-transparent hover:border-indigo-100 rounded-xl transition-all duration-200 shadow-sm bg-white" title="แก้ไข"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button><button onclick="deleteBooking('${booking.bookingId}')" class="p-2 text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 rounded-xl transition-all duration-200 shadow-sm bg-white" title="ลบ"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`
                       : ""
                   }
                 </div>
@@ -1217,6 +1324,7 @@
             const isCancelled = booking.status === "Cancel";
             const canEdit =
               !isCancelled &&
+              currentSession &&
               (currentSession.role === "Owner" ||
                 booking.createdBy === currentSession.username);
 
@@ -1227,11 +1335,13 @@
                      <span class="text-xs font-bold text-gray-400">#${
                        booking.bookingId
                      }</span>
-                     ${
-                       booking.program
-                         ? `<h3 class="font-semibold text-gray-800 line-clamp-1">${booking.program}</h3>`
-                         : '<div class="h-5"></div>'
-                     }
+                      ${
+                        booking.program
+                          ? `<h3 class="font-semibold text-gray-800 line-clamp-1">${
+                              booking.program
+                            }</h3>`
+                          : '<div class="h-5"></div>'
+                      }
                      <p class="text-sm text-gray-500 flex items-center mt-1">
                         <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         ${booking.location || "-"}
@@ -1239,49 +1349,53 @@
                    </div>
                    <div class="flex-shrink-0 ml-2">${statusBadge}</div>
                  </div>
-                 
+
                  <div class="space-y-2 text-sm text-gray-600 mb-4 border-t border-b border-gray-50 py-3 bg-gray-50/50 -mx-4 px-4">
                    <div class="flex justify-between">
-                     <span class="text-gray-500">เดินทาง</span> 
+                     <span class="text-gray-500">เดินทาง</span>
                      <span class="font-medium text-gray-800">${formatDateDisplay(
                        booking.travelDate
                      )}</span>
                    </div>
                    <div class="flex justify-between">
-                     <span class="text-gray-500">จำนวนคน</span> 
+                     <span class="text-gray-500">จำนวนคน</span>
                      <span class="font-medium text-gray-800">${totalPeople} คน</span>
                    </div>
                    <div class="flex justify-between">
-                     <span class="text-gray-500">ยอดรวม</span> 
+                     <span class="text-gray-500">ยอดรวม</span>
                      <span class="font-bold text-purple-600">${formatNumber(
                        booking.totalAmount
                      )} ฿</span>
                    </div>
                  </div>
 
-                 <div class="flex space-x-2">
+                  <div class="grid grid-cols-2 gap-2">
                     <button onclick="viewBooking('${
                       booking.bookingId
-                    }')" class="flex-1 flex items-center justify-center py-2 bg-blue-50 text-blue-700 rounded-xl text-sm font-bold hover:bg-blue-100 transition-colors">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                        รายละเอียด
+                    }')" class="flex items-center justify-center py-2 bg-purple-50 text-purple-700 rounded-xl text-sm font-bold hover:bg-purple-100 transition-colors">
+                      <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                      รายละเอียด
                     </button>
                     ${
+                      booking.status === "Cancel"
+                        ? ""
+                        : booking.status === "Completed"
+                        ? `<button onclick="viewReceipt('${booking.bookingId}')" class="flex items-center justify-center py-2 bg-green-50 text-green-700 rounded-xl text-sm font-bold hover:bg-green-100 transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            ใบเสร็จ
+                          </button>`
+                        : `<button onclick="viewInvoice('${booking.bookingId}')" class="flex items-center justify-center py-2 bg-blue-50 text-blue-700 rounded-xl text-sm font-bold hover:bg-blue-100 transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            ใบแจ้งหนี้
+                          </button>`
+                    }
+                    ${
                       canEdit
-                        ? `
-                       <button onclick="editBooking('${booking.bookingId}')" class="flex-1 flex items-center justify-center py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors" title="แก้ไข">
-                           <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                           แก้ไข
-                       </button>
-                       <button onclick="deleteBooking('${booking.bookingId}')" class="flex-1 flex items-center justify-center py-2 bg-red-50 text-red-700 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors" title="ลบ">
-                           <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                           ลบ
-                       </button>
-                    `
+                        ? `<button onclick="editBooking('${booking.bookingId}')" class="flex items-center justify-center py-2 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors" title="แก้ไข"><svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>แก้ไข</button><button onclick="deleteBooking('${booking.bookingId}')" class="flex items-center justify-center py-2 bg-red-50 text-red-700 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors" title="ลบ"><svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>ลบ</button>`
                         : ""
                     }
-                 </div>
-               </div>
+                  </div>
+                </div>
              `;
           })
           .join("");
@@ -1371,52 +1485,81 @@
     endIndex
   ) {
     // Text Info
-    const infoText = `หน้า ${currentBookingPage} จาก ${
-      totalPages || 1
-    } (${totalItems} รายการ)`;
-    document.getElementById("bookingPaginationInfo").textContent = infoText;
+    document.getElementById(
+      "bookingPaginationInfo"
+    ).textContent = `หน้า ${currentBookingPage} จาก ${totalPages} (${totalItems} รายการ)`;
     document.getElementById(
       "bookingMobilePageInfo"
-    ).textContent = `${currentBookingPage} / ${totalPages || 1}`;
+    ).textContent = `${currentBookingPage} / ${totalPages}`;
 
     // Buttons Disable State
     document.getElementById("bookingPrevPageBtn").disabled =
-      currentBookingPage <= 1;
+      currentBookingPage === 1;
     document.getElementById("bookingNextPageBtn").disabled =
-      currentBookingPage >= totalPages;
+      currentBookingPage === totalPages;
 
     // Desktop Page Numbers
     const pageNumbersContainer = document.getElementById("bookingPageNumbers");
     pageNumbersContainer.innerHTML = "";
 
-    if (totalPages <= 1) return;
+    const maxVisiblePages = 5;
+    let startPage = Math.max(
+      1,
+      currentBookingPage - Math.floor(maxVisiblePages / 2)
+    );
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    for (let i = 1; i <= totalPages; i++) {
-      // Logic to show limited page numbers (First, Last, Current, Surrounding)
-      if (
-        i === 1 ||
-        i === totalPages ||
-        (i >= currentBookingPage - 1 && i <= currentBookingPage + 1)
-      ) {
-        const btn = document.createElement("button");
-        btn.className = `w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-          i === currentBookingPage
-            ? "bg-purple-600 text-white shadow-md shadow-purple-200"
-            : "text-gray-600 hover:bg-gray-100 hover:text-purple-600"
-        }`;
-        btn.textContent = i;
-        btn.onclick = () => changeBookingPage(i);
-        pageNumbersContainer.appendChild(btn);
-      } else if (
-        (i === currentBookingPage - 2 && i > 1) ||
-        (i === currentBookingPage + 2 && i < totalPages)
-      ) {
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // First page + dots
+    if (startPage > 1) {
+      const firstBtn = createBookingPageButton(1);
+      pageNumbersContainer.appendChild(firstBtn);
+
+      if (startPage > 2) {
         const dots = document.createElement("span");
         dots.className = "text-gray-400 px-1 select-none";
         dots.textContent = "...";
         pageNumbersContainer.appendChild(dots);
       }
     }
+
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      const btn = createBookingPageButton(i);
+      pageNumbersContainer.appendChild(btn);
+    }
+
+    // Last page + dots
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        const dots = document.createElement("span");
+        dots.className = "text-gray-400 px-1 select-none";
+        dots.textContent = "...";
+        pageNumbersContainer.appendChild(dots);
+      }
+
+      const lastBtn = createBookingPageButton(totalPages);
+      pageNumbersContainer.appendChild(lastBtn);
+    }
+  }
+
+  function createBookingPageButton(pageNum) {
+    const btn = document.createElement("button");
+    btn.textContent = pageNum;
+    btn.onclick = () => changeBookingPage(pageNum);
+
+    if (pageNum === currentBookingPage) {
+      btn.className =
+        "px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-bold shadow-sm";
+    } else {
+      btn.className =
+        "px-3 py-1 border border-gray-200 rounded-lg hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 transition-all";
+    }
+
+    return btn;
   }
 
   /**
@@ -1475,16 +1618,15 @@
     // Clear slip file
     clearSlipFile();
 
-    // Show modal with animation
+    // Show modal
     const modal = document.getElementById("bookingModal");
     const modalContent = document.getElementById("bookingModalContent");
 
     modal.classList.remove("hidden");
+    modal.classList.add("modal-show");
 
-    // Trigger animation after a small delay
     setTimeout(() => {
-      modalContent.classList.remove("scale-95", "opacity-0");
-      modalContent.classList.add("scale-100", "opacity-100");
+      modalContent.classList.add("modal-content-show");
     }, 10);
   }
 
@@ -1495,13 +1637,13 @@
     const modal = document.getElementById("bookingModal");
     const modalContent = document.getElementById("bookingModalContent");
 
-    // Animate out
-    modalContent.classList.remove("scale-100", "opacity-100");
-    modalContent.classList.add("scale-95", "opacity-0");
+    modal.classList.add("modal-hide");
+    modalContent.classList.add("modal-content-hide");
 
-    // Hide modal after animation completes
     setTimeout(() => {
       modal.classList.add("hidden");
+      modal.classList.remove("modal-show", "modal-hide");
+      modalContent.classList.remove("modal-content-show", "modal-content-hide");
     }, 300);
   }
 
@@ -1544,13 +1686,16 @@
     const select = document.getElementById("program");
     const selectedOption = select.options[select.selectedIndex];
 
-    if (selectedOption.value) {
+    if (selectedOption && selectedOption.value) {
       document.getElementById("adultPrice").value =
         selectedOption.dataset.adultPrice || 0;
       document.getElementById("childPrice").value =
         selectedOption.dataset.childPrice || 0;
-      calculateTotal();
+    } else {
+      document.getElementById("adultPrice").value = 0;
+      document.getElementById("childPrice").value = 0;
     }
+    calculateTotal();
   }
 
   /**
@@ -1841,11 +1986,10 @@
     const modalContent = document.getElementById("bookingModalContent");
 
     modal.classList.remove("hidden");
+    modal.classList.add("modal-show");
 
-    // Trigger animation after a small delay
     setTimeout(() => {
-      modalContent.classList.remove("scale-95", "opacity-0");
-      modalContent.classList.add("scale-100", "opacity-100");
+      modalContent.classList.add("modal-content-show");
     }, 10);
   }
 
@@ -1864,103 +2008,139 @@
 
     const content = `
       <div class="space-y-4">
+        <!-- Dates -->
         <div class="grid grid-cols-2 gap-4">
+           <div>
+            <label class="text-xs text-gray-500 uppercase tracking-wide">รหัสการจอง</label>
+            <div class="text-sm font-bold text-gray-900 mt-1">${
+              booking.bookingId
+            }</div>
+          </div>
           <div>
-            <p class="text-sm text-gray-500">วันที่จอง</p>
-            <p class="font-semibold">${formatDateDisplay(
+            <label class="text-xs text-gray-500 uppercase tracking-wide">สถานะ</label>
+            <div class="mt-1">${getStatusBadge(booking.status)}</div>
+          </div>
+          <div>
+            <label class="text-xs text-gray-500 uppercase tracking-wide">วันที่จอง</label>
+            <div class="text-sm font-semibold text-gray-900 mt-1">${
               booking.bookingDate
-            )}</p>
+            }</div>
           </div>
           <div>
-            <p class="text-sm text-gray-500">วันที่เดินทาง</p>
-            <p class="font-semibold">${formatDateDisplay(
+            <label class="text-xs text-gray-500 uppercase tracking-wide">วันที่เดินทาง</label>
+            <div class="text-sm font-semibold text-gray-900 mt-1">${
               booking.travelDate
-            )}</p>
+            }</div>
           </div>
-          <div>
-            <p class="text-sm text-gray-500">สถานที่</p>
-            <p class="font-semibold">${booking.location}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">โปรแกรม</p>
-            <p class="font-semibold">${booking.program}</p>
-          </div>
+        </div>
 
-          <div>
-            <p class="text-sm text-gray-500">ผู้ใหญ่</p>
-            <p class="font-semibold">${booking.adults} คน × ${formatNumber(
-      booking.adultPrice
-    )} ฿</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">เด็ก</p>
-            <p class="font-semibold">${booking.children} คน × ${formatNumber(
-      booking.childPrice
-    )} ฿</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">ส่วนลด</p>
-            <p class="font-semibold">${formatNumber(booking.discount)} ฿</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">ยอดรวม</p>
-            <p class="font-semibold text-purple-600 text-xl">${formatNumber(
-              booking.totalAmount
-            )} ฿</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">สถานะ</p>
-            <p>${getStatusBadge(booking.status)}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">Agent</p>
-            <p class="font-semibold">${booking.agent || "-"}</p>
-          </div>
-          <div class="col-span-2">
-            <p class="text-sm text-gray-500">หมายเหตุ</p>
-            <p class="font-semibold">${booking.notes || "-"}</p>
-          </div>
-          <div class="col-span-2">
-            <p class="text-sm text-gray-500">สลิปการชำระเงิน</p>
-            ${
-              booking.slipUrl
-                ? `
-              <a href="${booking.slipUrl}" target="_blank" class="inline-flex items-center space-x-2 text-purple-600 hover:text-purple-800 font-semibold">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                <span>ดูสลิป</span>
-              </a>
-            `
-                : `<p class="text-gray-400">ยังไม่มีสลิป</p>`
-            }
-          </div>
-          <div>
-            <p class="text-sm text-gray-500">ผู้สร้าง</p>
-            <p class="font-semibold">${booking.createdBy}</p>
+        <!-- Location & Program -->
+        <div class="bg-gray-50 rounded-xl p-4">
+          <label class="text-xs text-gray-500 uppercase tracking-wide">สถานที่และโปรแกรม</label>
+          <div class="text-sm font-bold text-gray-900 mt-1">${
+            booking.location
+          }</div>
+          <div class="text-sm text-gray-600 mt-1">${
+            booking.program
+          }</div>
+        </div>
 
+        <!-- Pricing Details -->
+        <div class="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-xl p-4">
+          <h3 class="font-bold text-gray-900 mb-3">รายละเอียดราคา</h3>
+          <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">ผู้ใหญ่ (${
+                booking.adults
+              } คน × ${formatNumber(booking.adultPrice)} ฿)</span>
+              <span class="font-bold text-gray-900">${formatNumber(
+                booking.adults * booking.adultPrice
+              )} ฿</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">เด็ก (${
+                booking.children
+              } คน × ${formatNumber(booking.childPrice)} ฿)</span>
+              <span class="font-bold text-gray-900">${formatNumber(
+                booking.children * booking.childPrice
+              )} ฿</span>
+            </div>
+            <div class="flex justify-between text-sm text-red-600">
+              <span>ส่วนลด</span>
+              <span class="font-bold">-${formatNumber(
+                booking.discount
+              )} ฿</span>
+            </div>
+            <div class="border-t-2 border-purple-300 pt-2 mt-2 flex justify-between">
+              <span class="font-bold text-gray-900">ยอดรวมทั้งสิ้น</span>
+              <span class="text-xl font-bold text-purple-600">${formatNumber(
+                booking.totalAmount
+              )} ฿</span>
+            </div>
           </div>
-          <div>
-            <p class="text-sm text-gray-500">วันที่สร้าง</p>
-            <p class="font-semibold">${formatDateDisplay(booking.createdAt)}</p>
-          </div>
+        </div>
+
+        ${
+          booking.agent
+            ? `
+        <div>
+          <label class="text-xs text-gray-500 uppercase tracking-wide">Agent</label>
+          <div class="text-sm font-semibold text-gray-900 mt-1">${booking.agent}</div>
+        </div>
+        `
+            : ""
+        }
+
+        ${
+          booking.notes
+            ? `
+        <div>
+          <label class="text-xs text-gray-500 uppercase tracking-wide">หมายเหตุ</label>
+          <div class="text-sm text-gray-700 mt-1">${booking.notes}</div>
+        </div>
+        `
+            : ""
+        }
+
+        ${
+          booking.slipUrl
+            ? `
+        <div>
+          <label class="text-xs text-gray-500 uppercase tracking-wide block mb-2">สลิปการชำระเงิน</label>
+          <a href="${booking.slipUrl}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            ดูสลิป
+          </a>
+        </div>
+        `
+            : ""
+        }
+
+        <!-- Created/Updated Info -->
+        <div class="text-xs text-gray-500 border-t pt-4 space-y-1">
+          <div>สร้างโดย: ${booking.createdBy} (${booking.createdAt})</div>
+          ${
+            booking.updatedBy
+              ? `<div>แก้ไขล่าสุดโดย: ${booking.updatedBy} (${booking.updatedAt})</div>`
+              : ""
+          }
         </div>
       </div>
     `;
 
     document.getElementById("viewBookingContent").innerHTML = content;
 
-    // Show modal with animation
     const modal = document.getElementById("viewBookingModal");
     const modalContent = document.getElementById("viewBookingModalContent");
 
     modal.classList.remove("hidden");
+    modal.classList.add("modal-show");
 
-    // Trigger animation after a small delay
     setTimeout(() => {
-      modalContent.classList.remove("scale-95", "opacity-0");
-      modalContent.classList.add("scale-100", "opacity-100");
+      modalContent.classList.add("modal-content-show");
     }, 10);
   }
 
@@ -1971,13 +2151,13 @@
     const modal = document.getElementById("viewBookingModal");
     const modalContent = document.getElementById("viewBookingModalContent");
 
-    // Animate out
-    modalContent.classList.remove("scale-100", "opacity-100");
-    modalContent.classList.add("scale-95", "opacity-0");
+    modal.classList.add("modal-hide");
+    modalContent.classList.add("modal-content-hide");
 
-    // Hide modal after animation completes
     setTimeout(() => {
       modal.classList.add("hidden");
+      modal.classList.remove("modal-show", "modal-hide");
+      modalContent.classList.remove("modal-content-show", "modal-content-hide");
     }, 300);
   }
 
@@ -1993,9 +2173,8 @@
    */
   function getStatusBadge(status) {
     const badges = {
-      Pending: '<span class="badge badge-warning">Pending</span>',
       Confirm: '<span class="badge badge-info">Confirm</span>',
-      Complete: '<span class="badge badge-success">Complete</span>',
+      Completed: '<span class="badge badge-success">Completed</span>',
       Cancel: '<span class="badge badge-danger">Cancel</span>',
     };
     return badges[status] || status;
@@ -2138,6 +2317,165 @@
       };
       reader.readAsDataURL(selectedSlipFile);
     });
+  }
+
+  /**
+   * View Invoice PDF
+   */
+  async function viewInvoice(bookingId) {
+    const session = getSessionFromStorage();
+    if (!session) return;
+
+    document.getElementById("previewBookingId").textContent = "#" + bookingId;
+    const modal = document.getElementById("invoicePreviewModal");
+    const modalContent = document.getElementById("invoicePreviewContent");
+    const loading = document.getElementById("pdfLoadingState");
+    const iframe = document.getElementById("pdfIframe");
+
+    modal.classList.remove("hidden");
+    modal.classList.add("modal-show");
+    loading.classList.remove("hidden");
+    iframe.src = "about:blank";
+
+    setTimeout(() => {
+      modalContent.classList.add("modal-content-show");
+    }, 10);
+
+    google.script.run
+      .withSuccessHandler((response) => {
+        loading.classList.add("hidden");
+        if (response.success) {
+          const base64 = response.data.base64;
+          const binaryString = atob(base64);
+          const len = binaryString.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const file = new Blob([bytes], { type: "application/pdf" });
+          const fileURL = URL.createObjectURL(file);
+
+          iframe.src = fileURL;
+
+          // Set up download button
+          const downloadBtn = document.getElementById("downloadInvoiceBtn");
+          downloadBtn.onclick = () => {
+            const link = document.createElement("a");
+            link.href = fileURL;
+            link.download = response.data.filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+
+          // Set up new tab button
+          window.openInNewTab = () => {
+            const newTabLink = document.createElement("a");
+            newTabLink.href = fileURL;
+            newTabLink.target = "_blank";
+            newTabLink.click();
+          };
+        } else {
+          showToast(response.message, "error");
+          closeInvoicePreview();
+        }
+      })
+      .withFailureHandler((error) => {
+        loading.classList.add("hidden");
+        showToast("เกิดข้อผิดพลาด: " + error.message, "error");
+        closeInvoicePreview();
+      })
+      .generateInvoiceForBooking(session.sessionToken, bookingId);
+  }
+
+  function closeInvoicePreview() {
+    const modal = document.getElementById("invoicePreviewModal");
+    const modalContent = document.getElementById("invoicePreviewContent");
+    const iframe = document.getElementById("pdfIframe");
+
+    modal.classList.add("modal-hide");
+    modalContent.classList.add("modal-content-hide");
+
+    setTimeout(() => {
+      modal.classList.add("hidden");
+      modal.classList.remove("modal-show", "modal-hide");
+      modalContent.classList.remove("modal-content-show", "modal-content-hide");
+
+      // Revoke object URL if exists to free memory
+      if (iframe.src.startsWith("blob:")) {
+        URL.revokeObjectURL(iframe.src);
+      }
+      iframe.src = "about:blank";
+    }, 300);
+  }
+
+  /**
+   * View Receipt PDF (for Completed bookings)
+   */
+  async function viewReceipt(bookingId) {
+    const session = getSessionFromStorage();
+    if (!session) return;
+
+    document.getElementById("previewBookingId").textContent = "#" + bookingId;
+    const modal = document.getElementById("invoicePreviewModal");
+    const modalContent = document.getElementById("invoicePreviewContent");
+    const loading = document.getElementById("pdfLoadingState");
+    const iframe = document.getElementById("pdfIframe");
+
+    modal.classList.remove("hidden");
+    modal.classList.add("modal-show");
+    loading.classList.remove("hidden");
+    iframe.src = "about:blank";
+
+    setTimeout(() => {
+      modalContent.classList.add("modal-content-show");
+    }, 10);
+
+    google.script.run
+      .withSuccessHandler((response) => {
+        loading.classList.add("hidden");
+        if (response.success) {
+          const base64 = response.data.base64;
+          const binaryString = atob(base64);
+          const len = binaryString.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const file = new Blob([bytes], { type: "application/pdf" });
+          const fileURL = URL.createObjectURL(file);
+
+          iframe.src = fileURL;
+
+          // Set up download button
+          const downloadBtn = document.getElementById("downloadInvoiceBtn");
+          downloadBtn.onclick = () => {
+            const link = document.createElement("a");
+            link.href = fileURL;
+            link.download = response.data.filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+
+          // Set up new tab button
+          window.openInNewTab = () => {
+            const newTabLink = document.createElement("a");
+            newTabLink.href = fileURL;
+            newTabLink.target = "_blank";
+            newTabLink.click();
+          };
+        } else {
+          showToast(response.message, "error");
+          closeInvoicePreview();
+        }
+      })
+      .withFailureHandler((error) => {
+        loading.classList.add("hidden");
+        showToast("เกิดข้อผิดพลาด: " + error.message, "error");
+        closeInvoicePreview();
+      })
+      .generateReceiptForBooking(session.sessionToken, bookingId);
   }
 
   // Initialize when page loads

@@ -57,19 +57,10 @@
         class="w-full sm:w-auto px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white select-modern"
       >
         <option value="">ทุกสถานะ</option>
-        <option value="Pending">รอดำเนินการ</option>
-        <option value="Confirm">ยืนยันแล้ว</option>
-        <option value="Complete">เสร็จสิ้น</option>
-        <option value="Cancel">ยกเลิก</option>
+        <option value="Confirm">Confirm</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancel">Cancel</option>
       </select>
-    </div>
-
-    <!-- Summary Stats -->
-    <div
-      class="w-full md:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg shadow-purple-200"
-    >
-      <div class="text-sm opacity-90">รายการทั้งหมด</div>
-      <div class="text-2xl font-bold" id="totalPayments">0</div>
     </div>
   </div>
 
@@ -125,11 +116,13 @@
       <tbody id="paymentTableBody" class="divide-y divide-gray-100">
         <tr>
           <td colspan="8" class="px-6 py-12 text-center text-gray-400">
-            <div class="flex flex-col items-center space-y-3">
+            <div class="flex flex-col items-center justify-center space-y-3">
               <div
-                class="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"
+                class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"
               ></div>
-              <span>กำลังดึงข้อมูล...</span>
+              <p class="text-gray-400 text-sm font-medium animate-pulse">
+                กำลังดึงข้อมูลการอนุมัติ...
+              </p>
             </div>
           </td>
         </tr>
@@ -142,7 +135,102 @@
     id="paymentGridBody"
     class="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4"
   >
-    <!-- Mobile cards will be rendered here -->
+    <div class="col-span-full py-12 text-center">
+      <div class="flex flex-col items-center justify-center space-y-3">
+        <div
+          class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"
+        ></div>
+        <p class="text-gray-400 text-sm font-medium animate-pulse">
+          กำลังดึงข้อมูลการอนุมัติ...
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div
+    class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white px-6 py-4 rounded-2xl shadow-sm border border-gray-100"
+  >
+    <!-- Rows per page -->
+    <div class="flex items-center space-x-3 text-sm text-gray-600">
+      <span class="font-medium">แสดง</span>
+      <select
+        id="paymentItemsPerPageSelect"
+        onchange="changePaymentPageSize()"
+        class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all cursor-pointer font-bold text-gray-700"
+      >
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span class="font-medium">รายการต่อหน้า</span>
+    </div>
+
+    <!-- Page Info & Navigation -->
+    <div class="flex flex-col sm:flex-row items-center gap-4">
+      <span
+        class="hidden sm:inline text-sm font-medium text-gray-500"
+        id="paymentPaginationInfo"
+        >หน้า 1 จาก 1 (0 รายการ)</span
+      >
+      <div class="flex items-center space-x-1">
+        <button
+          onclick="changePaymentPage('prev')"
+          id="paymentPrevPageBtn"
+          class="p-4 sm:p-2 border border-gray-200 rounded-xl sm:rounded-lg hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <svg
+            class="w-6 h-6 sm:w-5 sm:h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            ></path>
+          </svg>
+        </button>
+
+        <!-- Desktop Page Numbers -->
+        <div
+          id="paymentPageNumbers"
+          class="hidden sm:flex items-center space-x-1"
+        >
+          <!-- Page buttons will be injected here -->
+        </div>
+
+        <!-- Mobile Page Info -->
+        <div
+          class="sm:hidden flex items-center px-6 py-2 bg-purple-50 rounded-xl text-sm font-bold text-purple-700 min-w-[100px] justify-center"
+        >
+          <span id="paymentMobilePageInfo">1 / 1</span>
+        </div>
+
+        <button
+          onclick="changePaymentPage('next')"
+          id="paymentNextPageBtn"
+          class="p-4 sm:p-2 border border-gray-200 rounded-xl sm:rounded-lg hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <svg
+            class="w-6 h-6 sm:w-5 sm:h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            ></path>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Empty State -->
@@ -175,46 +263,20 @@
 <!-- View Payment Detail Modal -->
 <div
   id="viewPaymentModal"
-  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-300"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm"
 >
   <div
     id="viewPaymentModalContent"
-    class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 opacity-0"
+    class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden"
   >
     <!-- Modal Header -->
-    <div
-      class="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 p-6 flex items-center justify-between border-b border-indigo-500 z-10"
-    >
-      <div class="flex items-center space-x-3">
-        <div
-          class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-            ></path>
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            ></path>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-xl font-bold text-white">รายละเอียดการจอง</h3>
-          <p class="text-indigo-100 text-sm" id="viewPaymentSubtitle">-</p>
-        </div>
-      </div>
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 relative">
+      <h3 class="text-2xl font-bold text-white" id="viewPaymentModalTitle">
+        รายละเอียดการจอง
+      </h3>
+      <p class="text-purple-100 text-sm mt-1" id="viewPaymentSubtitle">-</p>
       <button
+        type="button"
         onclick="closeViewPaymentModal()"
         class="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
       >
@@ -235,8 +297,10 @@
     </div>
 
     <!-- Modal Body -->
-    <div id="viewPaymentContent" class="p-6">
-      <!-- Content will be inserted here -->
+    <div class="overflow-y-auto max-h-[calc(90vh-140px)]">
+      <div id="viewPaymentContent" class="p-6">
+        <!-- Content will be inserted here -->
+      </div>
     </div>
   </div>
 </div>
@@ -244,39 +308,17 @@
 <!-- Update Status Modal -->
 <div
   id="updateStatusModal"
-  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 transition-opacity duration-300"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm"
 >
   <div
     id="updateStatusModalContent"
-    class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0"
+    class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
   >
     <!-- Modal Header -->
-    <div
-      class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 flex items-center justify-between border-b border-purple-500"
-    >
-      <div class="flex items-center space-x-3">
-        <div
-          class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center"
-        >
-          <svg
-            class="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            ></path>
-          </svg>
-        </div>
-        <div>
-          <h3 class="text-xl font-bold text-white">เปลี่ยนสถานะการจอง</h3>
-        </div>
-      </div>
+    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 relative">
+      <h3 class="text-2xl font-bold text-white">เปลี่ยนสถานะการจอง</h3>
       <button
+        type="button"
         onclick="closeUpdateStatusModal()"
         class="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
       >
@@ -297,78 +339,102 @@
     </div>
 
     <!-- Modal Body -->
-    <div class="p-6">
-      <input type="hidden" id="statusBookingId" />
+    <div class="overflow-y-auto max-h-[calc(90vh-180px)]">
+      <div class="p-6 space-y-4">
+        <input type="hidden" id="statusBookingId" />
 
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2"
-          >สถานะปัจจุบัน</label
-        >
-        <div id="currentStatusDisplay" class="text-lg font-semibold"></div>
-      </div>
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2"
-          >สถานะใหม่ <span class="text-red-500">*</span></label
-        >
-        <select
-          id="newStatusSelect"
-          class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white"
-        >
-          <option value="">-- เลือกสถานะ --</option>
-          <option value="Pending">รอดำเนินการ (Pending)</option>
-          <option value="Confirm">ยืนยันแล้ว (Confirm)</option>
-          <option value="Complete">เสร็จสิ้น (Complete)</option>
-          <option value="Cancel">ยกเลิก (Cancel)</option>
-        </select>
-      </div>
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2"
-          >เหตุผล (สำหรับการยกเลิก)</label
-        >
-        <textarea
-          id="statusReasonText"
-          rows="3"
-          class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
-          placeholder="ระบุเหตุผล..."
-        ></textarea>
-      </div>
-
-      <div class="mb-6">
-        <label class="flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            id="generateDocumentCheck"
-            class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-          />
-          <span class="ml-2 text-sm text-gray-700"
-            >ออกเอกสาร (Invoice/Receipt) อัตโนมัติ</span
+        <div class="transition-all duration-200">
+          <label class="block text-sm font-semibold text-gray-700 mb-2"
+            >สถานะปัจจุบัน</label
           >
-        </label>
-      </div>
+          <div class="flex justify-between items-center">
+            <div id="currentStatusDisplay" class="text-lg font-semibold"></div>
+            <div id="statusSlipContainer" class="hidden">
+              <a
+                id="statusSlipBtn"
+                href="#"
+                target="_blank"
+                class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-sm font-bold hover:bg-blue-100 transition-all border border-blue-100"
+              >
+                <svg
+                  class="w-4 h-4 mr-1.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  ></path>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  ></path>
+                </svg>
+                ดูสลิป
+              </a>
+            </div>
+          </div>
+        </div>
 
-      <div class="flex justify-end space-x-3 pt-4 border-t">
-        <button
-          type="button"
-          onclick="closeUpdateStatusModal()"
-          class="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-semibold"
-        >
-          ยกเลิก
-        </button>
-        <button
-          type="button"
-          onclick="confirmStatusUpdate()"
-          id="confirmStatusBtn"
-          class="btn-primary px-6 py-2 text-white rounded-lg flex items-center space-x-2"
-        >
-          <span
-            id="statusBtnSpinner"
-            class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-          ></span>
-          <span id="statusBtnText">บันทึก</span>
-        </button>
+        <div class="transition-all duration-200">
+          <label class="block text-sm font-semibold text-gray-700 mb-2"
+            >สถานะใหม่ <span class="text-red-500">*</span></label
+          >
+          <select
+            id="newStatusSelect"
+            onchange="toggleReasonField()"
+            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white select-modern"
+          >
+            <option value="">-- เลือกสถานะ --</option>
+            <option value="Confirm">Confirm</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancel">Cancel</option>
+          </select>
+        </div>
+
+        <div id="reasonField" class="hidden transition-all duration-200">
+          <label class="block text-sm font-semibold text-gray-700 mb-2"
+            >เหตุผล (สำหรับการยกเลิก) <span class="text-red-500">*</span></label
+          >
+          <textarea
+            id="statusReasonText"
+            rows="3"
+            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
+            placeholder="ระบุเหตุผล..."
+          ></textarea>
+        </div>
       </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div
+      class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t border-gray-200"
+    >
+      <button
+        type="button"
+        id="cancelStatusBtn"
+        onclick="closeUpdateStatusModal()"
+        class="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+      >
+        ยกเลิก
+      </button>
+      <button
+        type="button"
+        id="confirmStatusBtn"
+        onclick="confirmStatusUpdate()"
+        class="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:shadow-lg active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center space-x-2"
+      >
+        <span
+          id="statusBtnSpinner"
+          class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
+        <span id="statusBtnText">บันทึก</span>
+      </button>
     </div>
   </div>
 </div>
@@ -404,6 +470,11 @@
     loadPayments();
   }
 
+  // --- Pagination Variables ---
+  var currentPaymentPage = 1;
+  var paymentItemsPerPage = 10;
+  var currentFilteredPayments = [];
+
   function onPaymentsLoaded(response) {
     hidePaymentLoading();
 
@@ -418,15 +489,15 @@
     }
 
     allPayments = response.data;
-    displayPayments(allPayments);
+    currentFilteredPayments = allPayments;
+    currentPaymentPage = 1;
+    renderPaymentPagination();
   }
 
   function displayPayments(payments) {
     const tbody = document.getElementById("paymentTableBody");
     const gridBody = document.getElementById("paymentGridBody");
     const emptyState = document.getElementById("emptyPaymentState");
-
-    document.getElementById("totalPayments").textContent = payments.length;
 
     if (payments.length === 0) {
       tbody.innerHTML = `
@@ -495,17 +566,21 @@
           }
         </td>
         <td class="px-6 py-4 text-center">
-          <button 
+          ${
+            payment.status !== "Cancel"
+              ? `<button 
             onclick='event.stopPropagation(); openUpdateStatusModal(${JSON.stringify(
               payment
             ).replace(/'/g, "&#39;")})' 
-            class="inline-flex items-center px-3 py-1 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-all font-medium"
+            class="inline-flex text-sm items-center px-3 py-1 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-all font-medium"
           >
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
             </svg>
             เปลี่ยนสถานะ
-          </button>
+          </button>`
+              : '<span class="text-xs text-gray-400 font-medium"></span>'
+          }
         </td>
       </tr>
     `
@@ -514,54 +589,83 @@
 
     // Mobile Cards
     gridBody.innerHTML = payments
-      .map(
-        (payment) => `
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all cursor-pointer" onclick='viewPaymentDetail(${JSON.stringify(
-        payment
-      ).replace(/'/g, "&#39;")})'>
-        <div class="flex justify-between items-start mb-3">
-          <div>
-            <div class="text-sm font-bold text-gray-900">${
-              payment.bookingId
-            }</div>
-            <div class="text-xs text-gray-500">${payment.bookingDate}</div>
-          </div>
-          ${getStatusBadge(payment.status)}
-        </div>
-        <div class="space-y-2">
-          <div class="text-sm font-medium text-gray-900">${
-            payment.location
-          }</div>
-          <div class="text-xs text-gray-500">${payment.program}</div>
-          <div class="flex justify-between items-center pt-2 border-t">
-            <span class="text-sm font-bold text-purple-600">${Number(
-              payment.totalAmount
-            ).toLocaleString()} ฿</span>
-            <button 
-              onclick='event.stopPropagation(); openUpdateStatusModal(${JSON.stringify(
-                payment
-              ).replace(/'/g, "&#39;")})' 
-              class="text-xs px-3 py-1 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100"
-            >
-              เปลี่ยนสถานะ
-            </button>
-          </div>
-        </div>
-      </div>
-    `
-      )
+      .map((payment) => {
+        const statusBadge = getStatusBadge(payment.status);
+        const totalPeople =
+          (Number(payment.adults) || 0) + (Number(payment.children) || 0);
+
+        return `
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div class="flex justify-between items-start mb-3">
+                <div>
+                  <span class="text-xs font-bold text-gray-400">#${
+                    payment.bookingId
+                  }</span>
+                  <h3 class="font-semibold text-gray-800 line-clamp-1">${
+                    payment.program || "-"
+                  }</h3>
+                  <p class="text-sm text-gray-500 flex items-center mt-1">
+                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    ${payment.location || "-"}
+                  </p>
+                </div>
+                <div class="flex-shrink-0 ml-2">${statusBadge}</div>
+              </div>
+              
+              <div class="space-y-2 text-sm text-gray-600 mb-4 border-t border-b border-gray-50 py-3 bg-gray-50/50 -mx-4 px-4">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">เดินทาง</span> 
+                  <span class="font-medium text-gray-800">${
+                    payment.travelDate
+                  }</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">จำนวนคน</span> 
+                  <span class="font-medium text-gray-800">${totalPeople} คน</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">ยอดรวม</span> 
+                  <span class="font-bold text-purple-600">${Number(
+                    payment.totalAmount
+                  ).toLocaleString()} ฿</span>
+                </div>
+              </div>
+
+              <div class="flex space-x-2">
+                <button onclick='viewPaymentDetail(${JSON.stringify(
+                  payment
+                ).replace(
+                  /'/g,
+                  "&#39;"
+                )})' class="flex-1 flex items-center justify-center py-2 bg-blue-50 text-blue-700 rounded-xl text-sm font-bold hover:bg-blue-100 transition-colors">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                  รายละเอียด
+                </button>
+                ${
+                  payment.status !== "Cancel"
+                    ? `<button onclick='event.stopPropagation(); openUpdateStatusModal(${JSON.stringify(
+                        payment
+                      ).replace(
+                        /'/g,
+                        "&#39;"
+                      )})' class="flex-1 flex items-center justify-center py-2 bg-purple-50 text-purple-700 rounded-xl text-sm font-bold hover:bg-purple-100 transition-colors">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                  เปลี่ยนสถานะ
+                </button>`
+                    : ""
+                }
+              </div>
+            </div>
+          `;
+      })
       .join("");
   }
 
   function getStatusBadge(status) {
     const statusMap = {
-      Pending: {
-        class: "bg-yellow-100 text-yellow-800",
-        text: "รอดำเนินการ",
-      },
-      Confirm: { class: "bg-blue-100 text-blue-800", text: "ยืนยันแล้ว" },
-      Complete: { class: "bg-green-100 text-green-800", text: "เสร็จสิ้น" },
-      Cancel: { class: "bg-red-100 text-red-800", text: "ยกเลิก" },
+      Confirm: { class: "bg-blue-100 text-blue-800", text: "Confirm" },
+      Completed: { class: "bg-green-100 text-green-800", text: "Completed" },
+      Cancel: { class: "bg-red-100 text-red-800", text: "Cancel" },
     };
 
     const statusInfo = statusMap[status] || {
@@ -593,7 +697,9 @@
       );
     }
 
-    displayPayments(filtered);
+    currentFilteredPayments = filtered;
+    currentPaymentPage = 1;
+    renderPaymentPagination();
   }
 
   // View Payment Detail
@@ -676,7 +782,7 @@
           payment.agent
             ? `
           <div>
-            <label class="text-xs text-gray-500 uppercase tracking-wide">Agent/ช่องทาง</label>
+            <label class="text-xs text-gray-500 uppercase tracking-wide">Agent</label>
             <div class="text-sm font-semibold text-gray-900 mt-1">${payment.agent}</div>
           </div>
         `
@@ -721,9 +827,27 @@
           }
         </div>
 
+        <!-- History Section -->
+        <div class="mt-6 border-t pt-4">
+          <h3 class="font-bold text-gray-900 mb-3 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            ประวัติการเปลี่ยนสถานะ
+          </h3>
+          <div id="paymentHistoryList" class="space-y-4">
+            <div class="flex flex-col items-center justify-center py-6 space-y-3">
+              <div class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"></div>
+               <p class="text-gray-400 text-xs font-medium animate-pulse">กำลังดึงข้อมูลประวัติ...</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
         <div class="flex gap-3 pt-4 border-t">
-          <button 
+          ${
+            payment.status !== "Cancel"
+              ? `<button 
             onclick='openUpdateStatusModal(${JSON.stringify(payment).replace(
               /'/g,
               "&#39;"
@@ -731,7 +855,9 @@
             class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all font-semibold"
           >
             เปลี่ยนสถานะ
-          </button>
+          </button>`
+              : ""
+          }
           <button 
             onclick="closeViewPaymentModal()" 
             class="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-all font-semibold"
@@ -743,16 +869,20 @@
     `;
 
     document.getElementById("viewPaymentSubtitle").textContent =
-      payment.bookingId;
+      "รหัสการจอง: " + payment.bookingId;
     document.getElementById("viewPaymentContent").innerHTML = content;
+
+    // Load history
+    loadPaymentHistory(payment.bookingId);
 
     const modal = document.getElementById("viewPaymentModal");
     const modalContent = document.getElementById("viewPaymentModalContent");
 
     modal.classList.remove("hidden");
+    modal.classList.add("modal-show");
+
     setTimeout(() => {
-      modalContent.classList.remove("scale-95", "opacity-0");
-      modalContent.classList.add("scale-100", "opacity-100");
+      modalContent.classList.add("modal-content-show");
     }, 10);
   }
 
@@ -760,40 +890,97 @@
     const modal = document.getElementById("viewPaymentModal");
     const modalContent = document.getElementById("viewPaymentModalContent");
 
-    modalContent.classList.remove("scale-100", "opacity-100");
-    modalContent.classList.add("scale-95", "opacity-0");
-    setTimeout(() => modal.classList.add("hidden"), 300);
+    modal.classList.add("modal-hide");
+    modalContent.classList.add("modal-content-hide");
+
+    setTimeout(() => {
+      modal.classList.add("hidden");
+      modal.classList.remove("modal-show", "modal-hide");
+      modalContent.classList.remove("modal-content-show", "modal-content-hide");
+    }, 300);
   }
 
   // Update Status Modal
   function openUpdateStatusModal(payment) {
+    if (payment.status === "Cancel") {
+      showToast("ไม่สามารถเปลี่ยนสถานะรายการที่ยกเลิกแล้วได้", "info");
+      return;
+    }
     currentPayment = payment;
 
     document.getElementById("statusBookingId").value = payment.bookingId;
     document.getElementById("currentStatusDisplay").innerHTML = getStatusBadge(
       payment.status
     );
-    document.getElementById("newStatusSelect").value = "";
+
+    // Populate status dropdown excluding current status
+    const statusSelect = document.getElementById("newStatusSelect");
+    const allStatuses = ["Confirm", "Completed", "Cancel"];
+    const currentStatus = payment.status;
+
+    statusSelect.innerHTML = '<option value="">-- เลือกสถานะ --</option>';
+    allStatuses.forEach((status) => {
+      if (status !== currentStatus) {
+        const option = document.createElement("option");
+        option.value = status;
+        option.textContent = status;
+        statusSelect.appendChild(option);
+      }
+    });
+
     document.getElementById("statusReasonText").value = "";
-    document.getElementById("generateDocumentCheck").checked = false;
+
+    // Hide reason field by default
+    document.getElementById("reasonField").classList.add("hidden");
+
+    // Slip button logic
+    const slipContainer = document.getElementById("statusSlipContainer");
+    const slipBtn = document.getElementById("statusSlipBtn");
+
+    if (payment.slipUrl) {
+      slipContainer.classList.remove("hidden");
+      slipBtn.href = payment.slipUrl;
+    } else {
+      slipContainer.classList.add("hidden");
+      slipBtn.href = "#";
+    }
 
     const modal = document.getElementById("updateStatusModal");
     const modalContent = document.getElementById("updateStatusModalContent");
 
     modal.classList.remove("hidden");
+    modal.classList.add("modal-show");
+
     setTimeout(() => {
-      modalContent.classList.remove("scale-95", "opacity-0");
-      modalContent.classList.add("scale-100", "opacity-100");
+      modalContent.classList.add("modal-content-show");
     }, 10);
+  }
+
+  function toggleReasonField() {
+    const statusSelect = document.getElementById("newStatusSelect");
+    const reasonField = document.getElementById("reasonField");
+
+    if (statusSelect.value === "Cancel") {
+      reasonField.classList.remove("hidden");
+    } else {
+      reasonField.classList.add("hidden");
+      // Clear reason text when hiding
+      document.getElementById("statusReasonText").value = "";
+    }
   }
 
   function closeUpdateStatusModal() {
     const modal = document.getElementById("updateStatusModal");
     const modalContent = document.getElementById("updateStatusModalContent");
 
-    modalContent.classList.remove("scale-100", "opacity-100");
-    modalContent.classList.add("scale-95", "opacity-0");
-    setTimeout(() => modal.classList.add("hidden"), 300);
+    modal.classList.add("modal-hide");
+    modalContent.classList.add("modal-content-hide");
+
+    setTimeout(() => {
+      modal.classList.add("hidden");
+      modal.classList.remove("modal-show", "modal-hide");
+      modalContent.classList.remove("modal-content-show", "modal-content-hide");
+    }, 300);
   }
 
   function confirmStatusUpdate() {
@@ -806,9 +993,6 @@
     const bookingId = document.getElementById("statusBookingId").value;
     const newStatus = document.getElementById("newStatusSelect").value;
     const reason = document.getElementById("statusReasonText").value;
-    const generateDocument = document.getElementById(
-      "generateDocumentCheck"
-    ).checked;
 
     if (!newStatus) {
       showToast("กรุณาเลือกสถานะใหม่", "error");
@@ -822,32 +1006,30 @@
 
     // Show loading
     const btn = document.getElementById("confirmStatusBtn");
+    const cancelBtn = document.getElementById("cancelStatusBtn");
     const spinner = document.getElementById("statusBtnSpinner");
     const text = document.getElementById("statusBtnText");
 
     btn.disabled = true;
+    cancelBtn.disabled = true;
     spinner.classList.remove("hidden");
     text.textContent = "กำลังบันทึก...";
 
     google.script.run
       .withSuccessHandler(onStatusUpdated)
       .withFailureHandler(onPaymentError)
-      .updateBookingStatus(
-        session.sessionToken,
-        bookingId,
-        newStatus,
-        reason,
-        generateDocument
-      );
+      .updateBookingStatus(session.sessionToken, bookingId, newStatus, reason);
   }
 
   function onStatusUpdated(response) {
     // Reset button
     const btn = document.getElementById("confirmStatusBtn");
+    const cancelBtn = document.getElementById("cancelStatusBtn");
     const spinner = document.getElementById("statusBtnSpinner");
     const text = document.getElementById("statusBtnText");
 
     btn.disabled = false;
+    cancelBtn.disabled = false;
     spinner.classList.add("hidden");
     text.textContent = "บันทึก";
 
@@ -857,15 +1039,6 @@
     }
 
     showToast("อัพเดทสถานะสำเร็จ!", "success");
-
-    if (response.data.documentUrl) {
-      setTimeout(() => {
-        showToast(
-          `สร้างเอกสารสำเร็จ! <a href="${response.data.documentUrl}" target="_blank" class="underline ml-2">คลิกเพื่อดู</a>`,
-          "success"
-        );
-      }, 1000);
-    }
 
     closeUpdateStatusModal();
     closeViewPaymentModal();
@@ -879,16 +1052,158 @@
   // Utility Functions
   function showPaymentLoading() {
     const tbody = document.getElementById("paymentTableBody");
-    tbody.innerHTML = `
+    const gridBody = document.getElementById("paymentGridBody");
+
+    const loadingHtml = `
       <tr>
-        <td colspan="8" class="px-6 py-12 text-center text-gray-400">
-          <div class="flex flex-col items-center space-y-3">
-            <div class="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-            <span>กำลังดึงข้อมูล...</span>
+        <td colspan="8" class="px-6 py-12 text-center">
+          <div class="flex flex-col items-center justify-center space-y-3">
+            <div class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"></div>
+            <p class="text-gray-400 text-sm font-medium animate-pulse">กำลังดึงข้อมูลการอนุมัติ...</p>
           </div>
         </td>
       </tr>
     `;
+
+    const gridLoadingHtml = `
+      <div class="col-span-full py-12 text-center">
+        <div class="flex flex-col items-center justify-center space-y-3">
+          <div class="w-10 h-10 border-4 border-purple-100 border-t-purple-600 rounded-full animate-spin"></div>
+          <p class="text-gray-400 text-sm font-medium animate-pulse">กำลังดึงข้อมูลการอนุมัติ...</p>
+        </div>
+      </div>
+    `;
+
+    if (tbody) tbody.innerHTML = loadingHtml;
+    if (gridBody) gridBody.innerHTML = gridLoadingHtml;
+  }
+
+  /**
+   * Render Pagination & Data
+   */
+  function renderPaymentPagination() {
+    const totalItems = currentFilteredPayments.length;
+    const totalPages = Math.ceil(totalItems / paymentItemsPerPage);
+
+    // Validate current page
+    if (currentPaymentPage > totalPages) {
+      currentPaymentPage = totalPages || 1;
+    }
+    if (currentPaymentPage < 1) {
+      currentPaymentPage = 1;
+    }
+
+    const startIndex = (currentPaymentPage - 1) * paymentItemsPerPage;
+    const endIndex = Math.min(startIndex + paymentItemsPerPage, totalItems);
+    const pageData = currentFilteredPayments.slice(startIndex, endIndex);
+
+    // Render Data
+    displayPayments(pageData);
+
+    // Update Pagination Info
+    document.getElementById(
+      "paymentPaginationInfo"
+    ).textContent = `หน้า ${currentPaymentPage} จาก ${totalPages} (${totalItems} รายการ)`;
+    document.getElementById(
+      "paymentMobilePageInfo"
+    ).textContent = `${currentPaymentPage} / ${totalPages}`;
+
+    // Update Navigation Buttons
+    document.getElementById("paymentPrevPageBtn").disabled =
+      currentPaymentPage === 1;
+    document.getElementById("paymentNextPageBtn").disabled =
+      currentPaymentPage === totalPages;
+
+    // Render Page Numbers (Desktop)
+    const pageNumbersContainer = document.getElementById("paymentPageNumbers");
+    pageNumbersContainer.innerHTML = "";
+
+    const maxVisiblePages = 5;
+    let startPage = Math.max(
+      1,
+      currentPaymentPage - Math.floor(maxVisiblePages / 2)
+    );
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // First page + dots
+    if (startPage > 1) {
+      const firstBtn = createPaymentPageButton(1);
+      pageNumbersContainer.appendChild(firstBtn);
+
+      if (startPage > 2) {
+        const dots = document.createElement("span");
+        dots.className = "text-gray-400 px-1 select-none";
+        dots.textContent = "...";
+        pageNumbersContainer.appendChild(dots);
+      }
+    }
+
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      const btn = createPaymentPageButton(i);
+      pageNumbersContainer.appendChild(btn);
+    }
+
+    // Last page + dots
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        const dots = document.createElement("span");
+        dots.className = "text-gray-400 px-1 select-none";
+        dots.textContent = "...";
+        pageNumbersContainer.appendChild(dots);
+      }
+
+      const lastBtn = createPaymentPageButton(totalPages);
+      pageNumbersContainer.appendChild(lastBtn);
+    }
+  }
+
+  function createPaymentPageButton(pageNum) {
+    const btn = document.createElement("button");
+    btn.textContent = pageNum;
+    btn.onclick = () => changePaymentPage(pageNum);
+
+    if (pageNum === currentPaymentPage) {
+      btn.className =
+        "px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-bold shadow-sm";
+    } else {
+      btn.className =
+        "px-3 py-1 border border-gray-200 rounded-lg hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 transition-all";
+    }
+
+    return btn;
+  }
+
+  /**
+   * Change Page Action
+   */
+  function changePaymentPage(direction) {
+    const totalItems = currentFilteredPayments.length;
+    const totalPages = Math.ceil(totalItems / paymentItemsPerPage);
+
+    if (direction === "prev" && currentPaymentPage > 1) {
+      currentPaymentPage--;
+    } else if (direction === "next" && currentPaymentPage < totalPages) {
+      currentPaymentPage++;
+    } else if (typeof direction === "number") {
+      currentPaymentPage = direction;
+    }
+
+    renderPaymentPagination();
+  }
+
+  /**
+   * Change Page Size Action
+   */
+  function changePaymentPageSize() {
+    const selector = document.getElementById("paymentItemsPerPageSelect");
+    paymentItemsPerPage = parseInt(selector.value);
+    currentPaymentPage = 1; // Reset to page 1
+    renderPaymentPagination();
   }
 
   function hidePaymentLoading() {
@@ -899,5 +1214,63 @@
     console.error("Error:", error);
     showToast("เกิดข้อผิดพลาด: " + error.message, "error");
     hidePaymentLoading();
+  }
+
+  /**
+   * Status History Functions
+   */
+  function loadPaymentHistory(bookingId) {
+    const session = getSessionFromStorage();
+    if (!session) return;
+
+    google.script.run
+      .withSuccessHandler(renderPaymentHistory)
+      .getBookingStatusHistory(session.sessionToken, bookingId);
+  }
+
+  function renderPaymentHistory(response) {
+    const container = document.getElementById("paymentHistoryList");
+    if (!container) return;
+
+    if (!response.success) {
+      container.innerHTML = `<div class="text-sm text-red-500 py-2">ไม่สามารถดึงข้อมูลประวัติได้</div>`;
+      return;
+    }
+
+    const history = response.data;
+    if (history.length === 0) {
+      container.innerHTML = `<div class="text-sm text-gray-400 py-2">ไม่มีประวัติการเปลี่ยนสถานะ</div>`;
+      return;
+    }
+
+    container.innerHTML = history
+      .map(
+        (item) => `
+      <div class="relative pl-6 border-l-2 border-gray-100 pb-2 last:pb-0">
+        <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-white border-2 border-purple-500"></div>
+        <div class="text-xs text-gray-400 mb-1">${item.changedAt}</div>
+        <div class="text-sm">
+          <span class="font-bold text-gray-900">${item.changedBy}</span>
+          <span class="text-gray-600">เปลี่ยนสถานะ:</span>
+          <div class="mt-1 flex items-center gap-2">
+            ${getStatusBadge(item.oldStatus)}
+            <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            ${getStatusBadge(item.newStatus)}
+          </div>
+          ${
+            item.reason
+              ? `<div class="mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg italic border-l-2 border-gray-200">เหตุผล: ${item.reason}</div>`
+              : ""
+          }
+        </div>
+      </div>
+    `
+      )
+      .join("");
+  }
+
+  // Export function to window for main.html to call
+  if (typeof window.loadPaymentApproval === "undefined") {
+    window.loadPaymentApproval = loadPaymentApproval;
   }
 </script>

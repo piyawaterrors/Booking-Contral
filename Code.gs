@@ -74,9 +74,8 @@ const CONFIG = {
 
   // Booking Status
   STATUS: {
-    PENDING: "Pending",
     CONFIRM: "Confirm",
-    COMPLETE: "Complete",
+    COMPLETE: "Completed",
     CANCEL: "Cancel",
   },
 
@@ -142,7 +141,7 @@ function getCurrentTimestamp() {
 /**
  * Format Date to String
  */
-function formatDate(date, format = "yyyy-MM-dd") {
+function formatDate(date, format = "dd/MM/yyyy") {
   if (!date) return "";
   return Utilities.formatDate(
     new Date(date),
@@ -657,7 +656,6 @@ function setupAllSheets() {
         "ผู้เปลี่ยนสถานะ",
         "วันที่เปลี่ยนสถานะ",
         "เหตุผล",
-        "URL เอกสาร",
       ]);
     }
 
@@ -1120,7 +1118,7 @@ function createBooking(bookingData) {
       bookingData.adultPrice, // H: ราคาผู้ใหญ่
       bookingData.childPrice, // I: ราคาเด็ก
       bookingData.discount || 0, // J: ส่วนลด (บาท)
-      CONFIG.STATUS.PENDING, // K: สถานะ
+      CONFIG.STATUS.CONFIRM, // K: สถานะ
       bookingData.slipUrl || "", // L: URL สลิปการชำระเงิน
       bookingData.agent || "", // M: Agent
       bookingData.note || "", // N: หมายเหตุ
@@ -1228,76 +1226,6 @@ function updateBooking(bookingId, bookingData) {
     }
 
     return { success: false, message: "ไม่พบการจอง" };
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-}
-
-/**
- * Update Booking Status (OP and AR/AP)
- */
-function updateBookingStatus(bookingId, newStatus, reason = "") {
-  if (!hasRole([CONFIG.ROLES.OP, CONFIG.ROLES.AR_AP, CONFIG.ROLES.OWNER])) {
-    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
-  }
-
-  try {
-    const sheet = getSheet(CONFIG.SHEETS.BOOKING_RAW);
-    const data = sheet.getDataRange().getValues();
-    const session = getSession();
-
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === bookingId) {
-        const oldStatus = data[i][10];
-        const timestamp = getCurrentTimestamp();
-
-        // Update status
-        sheet.getRange(i + 1, 11).setValue(newStatus);
-        sheet.getRange(i + 1, 18).setValue(session.username);
-        sheet.getRange(i + 1, 19).setValue(timestamp);
-
-        // Log status change to history
-        logStatusChange(bookingId, oldStatus, newStatus, reason);
-
-        return { success: true, message: "อัพเดทสถานะสำเร็จ" };
-      }
-    }
-
-    return { success: false, message: "ไม่พบการจอง" };
-  } catch (error) {
-    return { success: false, message: error.message };
-  }
-}
-
-/**
- * Log Status Change to History
- */
-function logStatusChange(
-  bookingId,
-  oldStatus,
-  newStatus,
-  reason = "",
-  documentUrl = ""
-) {
-  try {
-    const sheet = getSheet(CONFIG.SHEETS.BOOKING_STATUS_HISTORY);
-    const session = getSession();
-    const historyId = generateUniqueId("HST");
-    const timestamp = getCurrentTimestamp();
-
-    const newRow = [
-      historyId, // A: รหัสประวัติ
-      bookingId, // B: รหัสการจอง
-      oldStatus, // C: สถานะเดิม
-      newStatus, // D: สถานะใหม่
-      session.username, // E: ผู้เปลี่ยนสถานะ
-      timestamp, // F: วันที่เปลี่ยนสถานะ
-      reason, // G: เหตุผล
-      documentUrl, // H: URL เอกสาร
-    ];
-
-    sheet.appendRow(newRow);
-    return { success: true };
   } catch (error) {
     return { success: false, message: error.message };
   }
@@ -1538,10 +1466,8 @@ function getAllPrograms(sessionToken) {
         childPrice: parseFloat(row[3]) || 0,
         isActive:
           row[4] === "เปิดใช้งาน" || row[4] === true || row[4] === "Active",
-        createdAt:
-          row[5] instanceof Date ? row[5].toISOString() : String(row[5] || ""),
-        updatedAt:
-          row[6] instanceof Date ? row[6].toISOString() : String(row[6] || ""),
+        createdAt: formatDate(row[5], "dd/MM/yyyy HH:mm:ss"),
+        updatedAt: formatDate(row[6], "dd/MM/yyyy HH:mm:ss"),
       });
     }
 
@@ -1743,12 +1669,57 @@ function toggleProgramStatus(programId) {
 /**
  * Get Dashboard Data
  */
-function getDashboardData() {
-  if (!hasRole([CONFIG.ROLES.COST, CONFIG.ROLES.OWNER])) {
-    return { success: false, message: "ไม่มีสิทธิ์เข้าถึง" };
-  }
-
+function getDashboardData(sessionToken, startDate, endDate) {
   try {
+    Logger.log(
+      "getDashboardData called with token: " +
+        (sessionToken ? "exists" : "null")
+    );
+    Logger.log("Date range: " + startDate + " to " + endDate);
+
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session) {
+      Logger.log("Session validation failed");
+      return {
+        success: false,
+        message: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
+      };
+    }
+
+    Logger.log(
+      "Session validated for user: " +
+        session.username +
+        ", role: " +
+        session.role
+    );
+
+    // Check role permissions (Owner, Cost, and Admin can access)
+    const allowedRoles = [
+      CONFIG.ROLES.OWNER,
+      CONFIG.ROLES.COST,
+      CONFIG.ROLES.ADMIN,
+    ];
+    if (!allowedRoles.includes(session.role)) {
+      Logger.log("Access denied for role: " + session.role);
+      return { success: false, message: "ไม่มีสิทธิ์เข้าถึง Dashboard" };
+    }
+
+    Logger.log("Access granted, fetching dashboard data...");
+
+    // Parse date range
+    const filterStart = startDate ? new Date(startDate) : null;
+    const filterEnd = endDate ? new Date(endDate) : null;
+
+    if (filterStart) {
+      filterStart.setHours(0, 0, 0, 0);
+    }
+    if (filterEnd) {
+      filterEnd.setHours(23, 59, 59, 999);
+    }
+
+    Logger.log("Filter range: " + filterStart + " to " + filterEnd);
+
     const sheet = getSheet(CONFIG.SHEETS.BOOKING_RAW);
     const data = sheet.getDataRange().getValues();
 
@@ -1764,6 +1735,12 @@ function getDashboardData() {
 
     const programStats = {};
     const agentStats = {};
+    const locationStats = {};
+
+    // Track status counts for debugging
+    const statusCounts = {};
+
+    Logger.log("Expected COMPLETE status: '" + CONFIG.STATUS.COMPLETE + "'");
 
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
@@ -1773,6 +1750,23 @@ function getDashboardData() {
       const program = row[4];
       const agent = row[12];
 
+      // Skip if outside date range
+      if (filterStart && bookingDate < filterStart) continue;
+      if (filterEnd && bookingDate > filterEnd) continue;
+
+      // Track status counts
+      if (!statusCounts[status]) {
+        statusCounts[status] = 0;
+      }
+      statusCounts[status]++;
+
+      // Log first few bookings for debugging
+      if (i <= 3) {
+        Logger.log(
+          "Booking " + i + " - Status: '" + status + "', Amount: " + totalAmount
+        );
+      }
+
       totalBookings++;
 
       // Count cancelled bookings
@@ -1780,15 +1774,27 @@ function getDashboardData() {
         cancelledBookings++;
       }
 
-      // Sales today (Complete only)
+      // Normalize dates for comparison (remove time component)
+      const bookingDateOnly = new Date(
+        bookingDate.getFullYear(),
+        bookingDate.getMonth(),
+        bookingDate.getDate()
+      );
+      const todayOnly = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+
+      // Sales today (Completed only, based on Booking Date)
       if (
         status === CONFIG.STATUS.COMPLETE &&
-        bookingDate.toDateString() === today.toDateString()
+        bookingDateOnly.getTime() === todayOnly.getTime()
       ) {
         salesToday += totalAmount;
       }
 
-      // Sales this month (Complete only)
+      // Sales this month (Completed only)
       if (
         status === CONFIG.STATUS.COMPLETE &&
         bookingDate.getMonth() === thisMonth &&
@@ -1797,7 +1803,7 @@ function getDashboardData() {
         salesThisMonth += totalAmount;
       }
 
-      // Pending amount (Confirm status)
+      // Confirmed travel amount
       if (status === CONFIG.STATUS.CONFIRM) {
         pendingAmount += totalAmount;
       }
@@ -1817,6 +1823,15 @@ function getDashboardData() {
           agentStats[agent] = 0;
         }
         agentStats[agent] += totalAmount;
+      }
+
+      // Location stats
+      if (status === CONFIG.STATUS.COMPLETE && row[3]) {
+        const locationName = row[3]; // Column D is Location Name
+        if (!locationStats[locationName]) {
+          locationStats[locationName] = 0;
+        }
+        locationStats[locationName] += totalAmount;
       }
     }
 
@@ -1841,9 +1856,11 @@ function getDashboardData() {
         cancelRate: cancelRate,
         topPrograms: topPrograms,
         salesByAgent: agentStats,
+        salesByLocation: locationStats,
       },
     };
   } catch (error) {
+    Logger.log("Get dashboard data error: " + error.message);
     return { success: false, message: error.message };
   }
 }
@@ -2332,9 +2349,9 @@ function getAllBookings(sessionToken) {
         notes: row[13],
         totalAmount: row[14],
         createdBy: row[15],
-        createdAt: formatDate(row[16], "yyyy-MM-dd HH:mm:ss"),
+        createdAt: formatDate(row[16], "dd/MM/yyyy HH:mm:ss"),
         updatedBy: row[17],
-        updatedAt: formatDate(row[18], "yyyy-MM-dd HH:mm:ss"),
+        updatedAt: formatDate(row[18], "dd/MM/yyyy HH:mm:ss"),
       });
     }
 
@@ -2389,9 +2406,9 @@ function getBookingById(sessionToken, bookingId) {
             notes: row[13],
             totalAmount: row[14],
             createdBy: row[15],
-            createdAt: formatDate(row[16], "yyyy-MM-dd HH:mm:ss"),
+            createdAt: formatDate(row[16], "dd/MM/yyyy HH:mm:ss"),
             updatedBy: row[17],
-            updatedAt: formatDate(row[18], "yyyy-MM-dd HH:mm:ss"),
+            updatedAt: formatDate(row[18], "dd/MM/yyyy HH:mm:ss"),
           },
         };
       }
@@ -2671,7 +2688,6 @@ function deleteBooking(sessionToken, bookingId, reason) {
         session.username,
         now,
         reason,
-        "", // No Slip URL for deletion
       ]);
     } catch (e) {
       Logger.log("Error logging history: " + e.toString());
@@ -2693,94 +2709,6 @@ function deleteBooking(sessionToken, bookingId, reason) {
  * Update Booking Status
  * เปลี่ยนสถานะการจอง (สำหรับ AR/AP, Owner)
  */
-function updateBookingStatus(sessionToken, bookingId, newStatus, reason = "") {
-  try {
-    // Validate session
-    const session = validateSession(sessionToken);
-    if (!session) {
-      return {
-        success: false,
-        message: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
-      };
-    }
-
-    // Check permissions (AR_AP and Owner can change status)
-    if (
-      session.role !== CONFIG.ROLES.AR_AP &&
-      session.role !== CONFIG.ROLES.OWNER
-    ) {
-      return {
-        success: false,
-        message: "คุณไม่มีสิทธิ์เปลี่ยนสถานะการจอง",
-      };
-    }
-
-    // Validate status
-    const validStatuses = [
-      CONFIG.STATUS.PENDING,
-      CONFIG.STATUS.CONFIRM,
-      CONFIG.STATUS.COMPLETE,
-      CONFIG.STATUS.CANCEL,
-    ];
-    if (!validStatuses.includes(newStatus)) {
-      return {
-        success: false,
-        message: "สถานะไม่ถูกต้อง",
-      };
-    }
-
-    const sheet = getSheet(CONFIG.SHEETS.BOOKING_RAW);
-    const data = sheet.getDataRange().getValues();
-
-    // Find booking
-    let rowIndex = -1;
-    let oldStatus = null;
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === bookingId) {
-        rowIndex = i + 1;
-        oldStatus = data[i][10]; // Column K: สถานะ
-        break;
-      }
-    }
-
-    if (rowIndex === -1) {
-      return {
-        success: false,
-        message: "ไม่พบข้อมูลการจอง",
-      };
-    }
-
-    // Update status
-    const now = getCurrentTimestamp();
-    sheet.getRange(rowIndex, 11).setValue(newStatus);
-    sheet.getRange(rowIndex, 18).setValue(session.username);
-    sheet.getRange(rowIndex, 19).setValue(now);
-
-    // Log status change in history
-    const historySheet = getSheet(CONFIG.SHEETS.BOOKING_STATUS_HISTORY);
-    const historyId = generateUniqueId("HST");
-    historySheet.appendRow([
-      historyId,
-      bookingId,
-      oldStatus,
-      newStatus,
-      session.username,
-      now,
-      reason,
-      "", // Document URL (for future use)
-    ]);
-
-    return {
-      success: true,
-      message: `เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: "เกิดข้อผิดพลาด: " + error.message,
-    };
-  }
-}
 
 // ========================================
 // SLIP UPLOAD FUNCTIONS
@@ -2891,7 +2819,7 @@ function updateBookingSlip(sessionToken, bookingId, slipUrl) {
       };
     }
 
-    // Update slip URL (Column L) and change status to PENDING (Column K)
+    // Update slip URL (Column L) and ensure status is CONFIRM (Column K)
     sheet.getRange(rowIndex, 12).setValue(slipUrl); // Slip URL
     sheet.getRange(rowIndex, 11).setValue(CONFIG.STATUS.CONFIRM); // Status → CONFIRM (มีสลิป = ยืนยัน)
     sheet.getRange(rowIndex, 18).setValue(session.username); // Updated by
@@ -3008,15 +2936,13 @@ function getBookingsForApproval(sessionToken, filterStatus = null) {
  * Update Booking Status
  * อัพเดทสถานะการจอง และบันทึกประวัติ
  */
-function updateBookingStatus(
-  sessionToken,
-  bookingId,
-  newStatus,
-  reason = "",
-  generateDocument = false
-) {
+/**
+ * Update Booking Status
+ * อัพเดทสถานะการจอง และบันทึกประวัติการเปลี่ยนสถานะ
+ */
+function updateBookingStatus(sessionToken, bookingId, newStatus, reason = "") {
   try {
-    // Validate session
+    // 1. Validate session
     const session = validateSession(sessionToken);
     if (!session) {
       return {
@@ -3025,24 +2951,20 @@ function updateBookingStatus(
       };
     }
 
-    // Check role (AR/AP or Owner only)
+    // 2. Check role (Admin, AR_AP, or Owner only)
     if (
+      session.role !== CONFIG.ROLES.ADMIN &&
       session.role !== CONFIG.ROLES.AR_AP &&
       session.role !== CONFIG.ROLES.OWNER
     ) {
       return {
         success: false,
-        message: "คุณไม่มีสิทธิ์ทำรายการนี้",
+        message: "คุณไม่มีสิทธิ์เปลี่ยนสถานะการจอง",
       };
     }
 
-    // Validate status
-    const validStatuses = [
-      CONFIG.STATUS.PENDING,
-      CONFIG.STATUS.CONFIRM,
-      CONFIG.STATUS.COMPLETE,
-      CONFIG.STATUS.CANCEL,
-    ];
+    // 3. Validate status
+    const validStatuses = Object.values(CONFIG.STATUS);
     if (!validStatuses.includes(newStatus)) {
       return {
         success: false,
@@ -3053,7 +2975,7 @@ function updateBookingStatus(
     const sheet = getSheet(CONFIG.SHEETS.BOOKING_RAW);
     const data = sheet.getDataRange().getValues();
 
-    // Find booking
+    // 4. Find booking row
     let rowIndex = -1;
     let oldStatus = "";
     let bookingData = null;
@@ -3061,7 +2983,7 @@ function updateBookingStatus(
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === bookingId) {
         rowIndex = i + 1;
-        oldStatus = data[i][10]; // Column K: สถานะ
+        oldStatus = data[i][10] || ""; // Column K: สถานะ
         bookingData = data[i];
         break;
       }
@@ -3070,63 +2992,36 @@ function updateBookingStatus(
     if (rowIndex === -1) {
       return {
         success: false,
-        message: "ไม่พบข้อมูลการจอง",
+        message: "ไม่พบข้อมูลการจองรหัส: " + bookingId,
       };
     }
 
-    // Validate status transition
-    if (oldStatus === newStatus) {
-      return {
-        success: false,
-        message: "สถานะเดิมและสถานะใหม่เหมือนกัน",
-      };
-    }
-
-    // Update status
+    // 5. Update Status in Booking_Raw
+    const now = getCurrentTimestamp();
     sheet.getRange(rowIndex, 11).setValue(newStatus); // Column K: สถานะ
     sheet.getRange(rowIndex, 18).setValue(session.username); // Column R: ผู้แก้ไขล่าสุด
-    sheet.getRange(rowIndex, 19).setValue(getCurrentTimestamp()); // Column S: วันที่แก้ไขล่าสุด
+    sheet.getRange(rowIndex, 19).setValue(now); // Column S: วันที่แก้ไขล่าสุด
 
-    // Generate document if requested
-    let documentUrl = "";
-    if (generateDocument) {
-      if (newStatus === CONFIG.STATUS.CONFIRM) {
-        // Generate Invoice
-        const invoiceResult = generateInvoice(bookingId, bookingData);
-        if (invoiceResult.success) {
-          documentUrl = invoiceResult.data.url;
-        }
-      } else if (newStatus === CONFIG.STATUS.COMPLETE) {
-        // Generate Receipt
-        const receiptResult = generateReceipt(bookingId, bookingData);
-        if (receiptResult.success) {
-          documentUrl = receiptResult.data.url;
-        }
-      }
-    }
-
-    // Save status history
+    // 6. Save to Status History
     const historyResult = saveStatusHistory(
       bookingId,
       oldStatus,
       newStatus,
       session.username,
-      reason,
-      documentUrl
+      reason
     );
 
     if (!historyResult.success) {
-      Logger.log("Failed to save status history: " + historyResult.message);
+      Logger.log("Failed to save history: " + historyResult.message);
     }
 
     return {
       success: true,
-      message: "อัพเดทสถานะสำเร็จ",
+      message: `เปลี่ยนสถานะเป็น ${newStatus} เรียบร้อยแล้ว`,
       data: {
         bookingId: bookingId,
         oldStatus: oldStatus,
         newStatus: newStatus,
-        documentUrl: documentUrl,
       },
     };
   } catch (error) {
@@ -3147,8 +3042,7 @@ function saveStatusHistory(
   oldStatus,
   newStatus,
   changedBy,
-  reason = "",
-  documentUrl = ""
+  reason = ""
 ) {
   try {
     const sheet = getSheet(CONFIG.SHEETS.BOOKING_STATUS_HISTORY);
@@ -3165,7 +3059,6 @@ function saveStatusHistory(
       changedBy, // Column E: ผู้เปลี่ยนสถานะ
       timestamp, // Column F: วันที่เปลี่ยนสถานะ
       reason, // Column G: เหตุผล
-      documentUrl, // Column H: URL เอกสาร
     ];
 
     sheet.appendRow(historyRow);
@@ -3184,13 +3077,83 @@ function saveStatusHistory(
 }
 
 /**
- * Generate Invoice (PDF)
- * สร้างใบแจ้งหนี้ (Invoice) เป็น PDF
+ * Generate Invoice for Booking
+ * สร้าง Invoice จากการจอง และส่งคืน URL (สำหรับ OP, Owner)
  */
-function generateInvoice(bookingId, bookingData) {
+function generateInvoiceForBooking(sessionToken, bookingId) {
   try {
-    // Create HTML content for Invoice
-    const html = `
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session) {
+      return {
+        success: false,
+        message: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
+      };
+    }
+
+    const sheet = getSheet(CONFIG.SHEETS.BOOKING_RAW);
+    const data = sheet.getDataRange().getValues();
+
+    // Find booking
+    let bookingData = null;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === bookingId) {
+        bookingData = data[i];
+        break;
+      }
+    }
+
+    if (!bookingData) {
+      return {
+        success: false,
+        message: "ไม่พบข้อมูลการจอง",
+      };
+    }
+
+    // Call internal generateInvoiceBase64
+    const result = generateInvoiceBase64(bookingId, bookingData);
+    return result;
+  } catch (error) {
+    Logger.log("Generate invoice for booking error: " + error.message);
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
+}
+
+/**
+ * Generate Invoice as Base64 (PDF)
+ * สร้างใบแจ้งหนี้เป็น Base64
+ */
+function generateInvoiceBase64(bookingId, bookingData) {
+  try {
+    // Re-use logic to get HTML
+    const html = getInvoiceHtml(bookingId, bookingData);
+
+    // Create PDF from HTML
+    const blob = Utilities.newBlob(html, "text/html", "invoice.html");
+    const pdfBlob = blob.getAs("application/pdf");
+    pdfBlob.setName(`Invoice_${bookingId}.pdf`);
+
+    return {
+      success: true,
+      data: {
+        base64: Utilities.base64Encode(pdfBlob.getBytes()),
+        filename: `Invoice_${bookingId}.pdf`,
+      },
+    };
+  } catch (error) {
+    Logger.log("Generate invoice base64 error: " + error.message);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Get Invoice HTML
+ */
+function getInvoiceHtml(bookingId, bookingData) {
+  return `
       <!DOCTYPE html>
       <html>
       <head>
@@ -3279,53 +3242,153 @@ function generateInvoice(bookingId, bookingData) {
       </body>
       </html>
     `;
+}
 
-    // Create PDF from HTML
-    const blob = Utilities.newBlob(html, "text/html", "invoice.html");
-    const pdfBlob = blob.getAs("application/pdf");
-    pdfBlob.setName(`Invoice_${bookingId}.pdf`);
+/**
+ * Generate Invoice (PDF)
+ * สร้างใบแจ้งหนี้ (Invoice) เป็น PDF (ยังเก็บไว้สำหรับกรณีออโต้)
+ */
 
-    // Upload to Drive
-    const folder = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
-
-    // Create subfolder for booking if not exists
-    const subfolderName = "Documents_" + bookingId;
-    let subfolder;
-    const subfolders = folder.getFoldersByName(subfolderName);
-    if (subfolders.hasNext()) {
-      subfolder = subfolders.next();
-    } else {
-      subfolder = folder.createFolder(subfolderName);
+/**
+ * Get Booking Status History
+ * ดึงประวัติการเปลี่ยนสถานะของการจอง
+ */
+function getBookingStatusHistory(sessionToken, bookingId) {
+  try {
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session) {
+      return {
+        success: false,
+        message: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
+      };
     }
 
-    const file = subfolder.createFile(pdfBlob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    const sheet = getSheet(CONFIG.SHEETS.BOOKING_STATUS_HISTORY);
+    const data = sheet.getDataRange().getValues();
+
+    const history = [];
+
+    // Skip header row
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+
+      if (row[1] === bookingId) {
+        // Column B: รหัสการจอง
+        history.push({
+          historyId: row[0],
+          bookingId: row[1],
+          oldStatus: row[2],
+          newStatus: row[3],
+          changedBy: row[4],
+          changedAt: formatDate(row[5], "dd/MM/yyyy HH:mm:ss"),
+          reason: row[6],
+        });
+      }
+    }
+
+    // Sort by date (newest first)
+    history.sort((a, b) => {
+      const dateA = new Date(
+        a.changedAt.split(" ")[0].split("/").reverse().join("-")
+      );
+      const dateB = new Date(
+        b.changedAt.split(" ")[0].split("/").reverse().join("-")
+      );
+      return dateB - dateA;
+    });
 
     return {
       success: true,
-      message: "สร้าง Invoice สำเร็จ",
-      data: {
-        url: file.getUrl(),
-        fileId: file.getId(),
-      },
+      data: history,
     };
   } catch (error) {
-    Logger.log("Generate invoice error: " + error.message);
+    Logger.log("Get booking status history error: " + error.message);
     return {
       success: false,
-      message: "เกิดข้อผิดพลาดในการสร้าง Invoice: " + error.message,
+      message: "เกิดข้อผิดพลาด: " + error.message,
     };
   }
 }
 
 /**
- * Generate Receipt (PDF)
- * สร้างใบเสร็จรับเงิน (Receipt) เป็น PDF
+ * Generate Receipt for Booking
+ * สร้าง Receipt จากการจอง และส่งคืน Base64 (สำหรับ OP, Owner)
  */
-function generateReceipt(bookingId, bookingData) {
+function generateReceiptForBooking(sessionToken, bookingId) {
   try {
-    // Create HTML content for Receipt
-    const html = `
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session) {
+      return {
+        success: false,
+        message: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
+      };
+    }
+
+    const sheet = getSheet(CONFIG.SHEETS.BOOKING_RAW);
+    const data = sheet.getDataRange().getValues();
+
+    // Find booking
+    let bookingData = null;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === bookingId) {
+        bookingData = data[i];
+        break;
+      }
+    }
+
+    if (!bookingData) {
+      return {
+        success: false,
+        message: "ไม่พบข้อมูลการจอง",
+      };
+    }
+
+    // Call internal generateReceiptBase64
+    const result = generateReceiptBase64(bookingId, bookingData);
+    return result;
+  } catch (error) {
+    Logger.log("Generate receipt for booking error: " + error.message);
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
+}
+
+/**
+ * Generate Receipt as Base64 (PDF)
+ * สร้างใบเสร็จรับเงินเป็น Base64
+ */
+function generateReceiptBase64(bookingId, bookingData) {
+  try {
+    // Get HTML for receipt
+    const html = getReceiptHtml(bookingId, bookingData);
+
+    // Create PDF from HTML
+    const blob = Utilities.newBlob(html, "text/html", "receipt.html");
+    const pdfBlob = blob.getAs("application/pdf");
+    pdfBlob.setName(`Receipt_${bookingId}.pdf`);
+
+    return {
+      success: true,
+      data: {
+        base64: Utilities.base64Encode(pdfBlob.getBytes()),
+        filename: `Receipt_${bookingId}.pdf`,
+      },
+    };
+  } catch (error) {
+    Logger.log("Generate receipt base64 error: " + error.message);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
+ * Get Receipt HTML
+ */
+function getReceiptHtml(bookingId, bookingData) {
+  return `
       <!DOCTYPE html>
       <html>
       <head>
@@ -3421,50 +3484,17 @@ function generateReceipt(bookingId, bookingData) {
       </body>
       </html>
     `;
-
-    // Create PDF from HTML
-    const blob = Utilities.newBlob(html, "text/html", "receipt.html");
-    const pdfBlob = blob.getAs("application/pdf");
-    pdfBlob.setName(`Receipt_${bookingId}.pdf`);
-
-    // Upload to Drive
-    const folder = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
-
-    // Create subfolder for booking if not exists
-    const subfolderName = "Documents_" + bookingId;
-    let subfolder;
-    const subfolders = folder.getFoldersByName(subfolderName);
-    if (subfolders.hasNext()) {
-      subfolder = subfolders.next();
-    } else {
-      subfolder = folder.createFolder(subfolderName);
-    }
-
-    const file = subfolder.createFile(pdfBlob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-    return {
-      success: true,
-      message: "สร้าง Receipt สำเร็จ",
-      data: {
-        url: file.getUrl(),
-        fileId: file.getId(),
-      },
-    };
-  } catch (error) {
-    Logger.log("Generate receipt error: " + error.message);
-    return {
-      success: false,
-      message: "เกิดข้อผิดพลาดในการสร้าง Receipt: " + error.message,
-    };
-  }
 }
 
+// ========================================
+// REPORTS FUNCTIONS
+// ========================================
+
 /**
- * Get Booking Status History
- * ดึงประวัติการเปลี่ยนสถานะของการจอง
+ * Get Daily Sales Report by Location
+ * รายงานยอดขายรายวันแยกตามสถานที่ (เฉพาะ Completed)
  */
-function getBookingStatusHistory(sessionToken, bookingId) {
+function getDailySalesReport(sessionToken, startDate, endDate) {
   try {
     // Validate session
     const session = validateSession(sessionToken);
@@ -3475,47 +3505,144 @@ function getBookingStatusHistory(sessionToken, bookingId) {
       };
     }
 
-    const sheet = getSheet(CONFIG.SHEETS.BOOKING_STATUS_HISTORY);
+    const sheet = getSheet(CONFIG.SHEETS.BOOKING_RAW);
     const data = sheet.getDataRange().getValues();
 
-    const history = [];
+    // Parse dates
+    const filterStartDate = new Date(startDate);
+    const filterEndDate = new Date(endDate);
+    filterEndDate.setHours(23, 59, 59, 999); // Include entire end date
 
-    // Skip header row
+    // Aggregate by location
+    const locationSales = {};
+
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
 
-      if (row[1] === bookingId) {
-        // Column B: รหัสการจอง
-        history.push({
-          historyId: row[0],
-          bookingId: row[1],
-          oldStatus: row[2],
-          newStatus: row[3],
-          changedBy: row[4],
-          changedAt: formatDate(row[5], "dd/MM/yyyy HH:mm:ss"),
-          reason: row[6],
-          documentUrl: row[7],
-        });
+      // Skip empty rows
+      if (!row[0]) continue;
+
+      const status = row[10]; // Column K: สถานะ
+      const travelDate = new Date(row[2]); // Column C: วันที่เดินทาง
+      const location = row[3] || "ไม่ระบุ"; // Column D: สถานที่
+      const totalAmount = Number(row[14]) || 0; // Column O: ยอดรวม
+
+      // Filter: Only Completed status
+      if (status !== CONFIG.STATUS.COMPLETE) continue;
+
+      // Filter: Date range
+      if (travelDate < filterStartDate || travelDate > filterEndDate) continue;
+
+      // Aggregate
+      if (!locationSales[location]) {
+        locationSales[location] = {
+          location: location,
+          bookingCount: 0,
+          totalSales: 0,
+        };
       }
+
+      locationSales[location].bookingCount++;
+      locationSales[location].totalSales += totalAmount;
     }
 
-    // Sort by date (newest first)
-    history.sort((a, b) => {
-      const dateA = new Date(
-        a.changedAt.split(" ")[0].split("/").reverse().join("-")
-      );
-      const dateB = new Date(
-        b.changedAt.split(" ")[0].split("/").reverse().join("-")
-      );
-      return dateB - dateA;
-    });
+    // Convert to array and sort by total sales (descending)
+    const result = Object.values(locationSales).sort(
+      (a, b) => b.totalSales - a.totalSales
+    );
 
     return {
       success: true,
-      data: history,
+      data: {
+        dailySales: result,
+      },
     };
   } catch (error) {
-    Logger.log("Get booking status history error: " + error.message);
+    Logger.log("Get daily sales report error: " + error.message);
+    return {
+      success: false,
+      message: "เกิดข้อผิดพลาด: " + error.message,
+    };
+  }
+}
+
+/**
+ * Get Program Summary Report
+ * รายงานสรุปยอดแต่ละโปรแกรม
+ */
+function getProgramSummaryReport(sessionToken, startDate, endDate) {
+  try {
+    // Validate session
+    const session = validateSession(sessionToken);
+    if (!session) {
+      return {
+        success: false,
+        message: "Session หมดอายุ กรุณาเข้าสู่ระบบใหม่",
+      };
+    }
+
+    const sheet = getSheet(CONFIG.SHEETS.BOOKING_RAW);
+    const data = sheet.getDataRange().getValues();
+
+    // Parse dates
+    const filterStartDate = new Date(startDate);
+    const filterEndDate = new Date(endDate);
+    filterEndDate.setHours(23, 59, 59, 999); // Include entire end date
+
+    // Aggregate by program
+    const programSummary = {};
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+
+      // Skip empty rows
+      if (!row[0]) continue;
+
+      const status = row[10]; // Column K: สถานะ
+      const travelDate = new Date(row[2]); // Column C: วันที่เดินทาง
+      const program = row[4] || "ไม่ระบุ"; // Column E: โปรแกรม
+      const adults = Number(row[5]) || 0; // Column F: ผู้ใหญ่
+      const children = Number(row[6]) || 0; // Column G: เด็ก
+      const totalAmount = Number(row[14]) || 0; // Column O: ยอดรวม
+
+      // Filter: Only Completed status
+      if (status !== CONFIG.STATUS.COMPLETE) continue;
+
+      // Filter: Date range
+      if (travelDate < filterStartDate || travelDate > filterEndDate) continue;
+
+      // Aggregate
+      if (!programSummary[program]) {
+        programSummary[program] = {
+          program: program,
+          bookingCount: 0,
+          totalAdults: 0,
+          totalChildren: 0,
+          totalPeople: 0,
+          totalRevenue: 0,
+        };
+      }
+
+      programSummary[program].bookingCount++;
+      programSummary[program].totalAdults += adults;
+      programSummary[program].totalChildren += children;
+      programSummary[program].totalPeople += adults + children;
+      programSummary[program].totalRevenue += totalAmount;
+    }
+
+    // Convert to array and sort by booking count (descending)
+    const result = Object.values(programSummary).sort(
+      (a, b) => b.bookingCount - a.bookingCount
+    );
+
+    return {
+      success: true,
+      data: {
+        programSummary: result,
+      },
+    };
+  } catch (error) {
+    Logger.log("Get program summary report error: " + error.message);
     return {
       success: false,
       message: "เกิดข้อผิดพลาด: " + error.message,
