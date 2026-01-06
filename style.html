@@ -161,19 +161,32 @@
   .input-modern {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 2px solid #e5e7eb;
+    border: 2px solid #f3f4f6;
     border-radius: 0.75rem;
     font-size: 1rem;
     transition: all 0.2s ease;
+    outline: none;
   }
 
   .input-modern:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.1);
+  }
+
+  .input-modern:hover:not(:focus) {
+    border-color: #c4b5fd;
+    box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.1);
   }
 
   .select-modern {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #f3f4f6;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    outline: none;
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -184,9 +197,15 @@
     background-color: white;
   }
 
-  .select-modern:hover {
-    background-color: #f9fafb;
-    border-color: #ddd6fe;
+  .select-modern:focus {
+    outline: none;
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.1);
+  }
+
+  .select-modern:hover:not(:focus) {
+    border-color: #c4b5fd;
+    box-shadow: 0 0 0 2px rgba(196, 181, 253, 0.1);
   }
 
   /* ========================================

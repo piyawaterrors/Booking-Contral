@@ -2,79 +2,87 @@
 <div class="space-y-6">
   <!-- Header Actions -->
   <div
-    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+    class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4"
   >
-    <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
-      <!-- Refresh Button -->
-      <button
-        onclick="refreshEmployeesData()"
-        class="hidden sm:flex p-3 bg-white border-2 border-gray-100 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200 shadow-sm"
-        title="รีเฟรชข้อมูล"
+    <!-- Search and Filters -->
+    <div class="w-full lg:w-auto lg:flex-1">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-3 lg:items-center"
       >
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          ></path>
-        </svg>
-      </button>
+        <!-- Refresh & Search Group -->
+        <div class="flex flex-row gap-2 sm:col-span-2 lg:flex-1">
+          <!-- Refresh Button -->
+          <button
+            onclick="refreshEmployeesData()"
+            class="flex-shrink-0 flex items-center justify-center p-3 bg-white border-2 border-gray-100 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200 shadow-sm"
+            title="รีเฟรชข้อมูล"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              ></path>
+            </svg>
+          </button>
 
-      <!-- Search -->
-      <div class="relative flex-1 sm:w-64">
-        <input
-          type="text"
-          id="employeeSearchInput"
-          placeholder="ค้นหาพนักงาน..."
-          onkeyup="filterEmployees()"
-          class="w-full pl-10 pr-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
-        />
-        <svg
-          class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+          <!-- Search -->
+          <div class="relative flex-1 lg:w-64">
+            <input
+              type="text"
+              id="employeeSearchInput"
+              placeholder="ค้นหาพนักงาน..."
+              onkeyup="filterEmployees()"
+              class="w-full input-modern pl-10"
+            />
+            <svg
+              class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Filter by Role -->
+        <select
+          id="employeeFilterRole"
+          onchange="filterEmployees()"
+          class="w-full lg:w-44 input-modern select-modern"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          ></path>
-        </svg>
+          <option value="">ทุกตำแหน่ง</option>
+          <option value="Sale">Sale</option>
+          <option value="OP">OP</option>
+          <option value="Admin">Admin</option>
+          <option value="AR_AP">AR/AP</option>
+          <option value="Cost">Cost</option>
+          <option value="Owner">Owner</option>
+        </select>
+
+        <!-- Filter by Status -->
+        <select
+          id="employeeFilterStatus"
+          onchange="filterEmployees()"
+          class="w-full lg:w-44 input-modern select-modern"
+        >
+          <option value="">ทุกสถานะ</option>
+          <option value="เปิดใช้งาน">เปิดใช้งาน</option>
+          <option value="ปิดใช้งาน">ปิดใช้งาน</option>
+        </select>
       </div>
-
-      <!-- Filter by Role -->
-      <select
-        id="employeeFilterRole"
-        onchange="filterEmployees()"
-        class="w-full sm:w-auto px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white select-modern"
-      >
-        <option value="">ทุกตำแหน่ง</option>
-        <option value="Sale">Sale</option>
-        <option value="OP">OP</option>
-        <option value="Admin">Admin</option>
-        <option value="AR_AP">AR/AP</option>
-        <option value="Cost">Cost</option>
-        <option value="Owner">Owner</option>
-      </select>
-
-      <!-- Filter by Status -->
-      <select
-        id="employeeFilterStatus"
-        onchange="filterEmployees()"
-        class="w-full sm:w-auto px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white select-modern"
-      >
-        <option value="">ทุกสถานะ</option>
-        <option value="เปิดใช้งาน">เปิดใช้งาน</option>
-        <option value="ปิดใช้งาน">ปิดใช้งาน</option>
-      </select>
     </div>
 
     <!-- Add Employee Button -->
@@ -325,7 +333,7 @@
             type="text"
             id="fullName"
             required
-            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
+            class="input-modern"
             placeholder="กรอกชื่อ-นามสกุล"
           />
         </div>
@@ -339,7 +347,7 @@
             type="email"
             id="email"
             required
-            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
+            class="input-modern"
             placeholder="example@email.com"
           />
         </div>
@@ -353,7 +361,7 @@
             type="text"
             id="username"
             required
-            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
+            class="input-modern"
             placeholder="กรอกชื่อผู้ใช้"
           />
         </div>
@@ -363,11 +371,7 @@
           <label class="block text-sm font-semibold text-gray-700 mb-2">
             ตำแหน่ง *
           </label>
-          <select
-            id="role"
-            required
-            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white select-modern"
-          >
+          <select id="role" required class="input-modern select-modern">
             <option value="">เลือกตำแหน่ง</option>
             <option value="Sale">Sale</option>
             <option value="OP">OP</option>
@@ -383,10 +387,7 @@
           <label class="block text-sm font-semibold text-gray-700 mb-2">
             สถานะ
           </label>
-          <select
-            id="status"
-            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white select-modern"
-          >
+          <select id="status" class="input-modern select-modern">
             <option value="เปิดใช้งาน">เปิดใช้งาน</option>
             <option value="ปิดใช้งาน">ปิดใช้งาน</option>
           </select>
@@ -833,7 +834,7 @@
     gbody.innerHTML = paginatedItems
       .map(
         (emp) => `
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-purple-200 transition-all duration-300 transform hover:-translate-y-1">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-0.05">
         <div class="flex justify-between items-start mb-4">
           <div class="flex items-center">
             <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-lg font-bold mr-3 shadow-lg shadow-purple-100">

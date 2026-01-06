@@ -2,64 +2,72 @@
 <div class="space-y-6">
   <!-- Header Actions -->
   <div
-    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+    class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4"
   >
-    <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
-      <!-- Refresh Button -->
-      <button
-        onclick="refreshData()"
-        class="hidden sm:flex p-3 bg-white border-2 border-gray-100 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200 shadow-sm"
-        title="รีเฟรชข้อมูล"
+    <!-- Search and Filters -->
+    <div class="w-full lg:w-auto lg:flex-1">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-3 lg:items-center"
       >
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          ></path>
-        </svg>
-      </button>
+        <!-- Refresh & Search Group -->
+        <div class="flex flex-row gap-2 sm:col-span-2 lg:flex-1">
+          <!-- Refresh Button -->
+          <button
+            onclick="refreshData()"
+            class="flex-shrink-0 flex items-center justify-center p-3 bg-white border-2 border-gray-100 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200 shadow-sm"
+            title="รีเฟรชข้อมูล"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              ></path>
+            </svg>
+          </button>
 
-      <!-- Search -->
-      <div class="relative flex-1 sm:w-64">
-        <input
-          type="text"
-          id="programSearchInput"
-          placeholder="ค้นหาโปรแกรม..."
-          onkeyup="filterPrograms()"
-          class="w-full pl-10 pr-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
-        />
-        <svg
-          class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+          <!-- Search -->
+          <div class="relative flex-1 lg:w-64">
+            <input
+              type="text"
+              id="programSearchInput"
+              placeholder="ค้นหาโปรแกรม..."
+              onkeyup="filterPrograms()"
+              class="w-full input-modern pl-10"
+            />
+            <svg
+              class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Filter by Status -->
+        <select
+          id="programFilterStatus"
+          onchange="filterPrograms()"
+          class="w-full lg:w-auto input-modern select-modern"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          ></path>
-        </svg>
+          <option value="">ทุกสถานะ</option>
+          <option value="เปิดใช้งาน">เปิดใช้งาน</option>
+          <option value="ปิดใช้งาน">ปิดใช้งาน</option>
+        </select>
       </div>
-
-      <!-- Filter by Status -->
-      <select
-        id="programFilterStatus"
-        onchange="filterPrograms()"
-        class="w-full sm:w-auto px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white select-modern"
-      >
-        <option value="">ทุกสถานะ</option>
-        <option value="เปิดใช้งาน">เปิดใช้งาน</option>
-        <option value="ปิดใช้งาน">ปิดใช้งาน</option>
-      </select>
     </div>
 
     <!-- Add Program Button -->
@@ -151,7 +159,7 @@
     <!-- Rows per page -->
     <div class="flex items-center space-x-3 text-sm text-gray-600">
       <span class="font-medium">แสดง</span>
-      <select id="itemsPerPage" onchange="changePageSize()" class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all cursor-pointer font-bold text-gray-700">
+      <select id="itemsPerPage" onchange="changePageSize()"   class="input-modern select-modern w-full sm:w-auto">
         <option value="10">10</option>
         <option value="20">20</option>
         <option value="50">50</option>
@@ -263,7 +271,7 @@
           id="displayProgramId"
           required
           placeholder="ระบุรหัสโปรแกรม (เช่น PRG001)"
-          class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-0.05 uppercase"
+          class="input-modern"
         />
       </div>
 
@@ -275,7 +283,7 @@
           id="programDescription"
           rows="3"
           placeholder="ระบุรายละเอียดโปรแกรม"
-          class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-0.05 resize-none"
+          class="input-modern"
         ></textarea>
       </div>
 
@@ -290,7 +298,7 @@
             required
             step="0.01"
             placeholder="0.00"
-            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-0.05"
+            class="input-modern"
           />
         </div>
         <div>
@@ -303,7 +311,7 @@
             required
             step="0.01"
             placeholder="0.00"
-            class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 transition-all duration-0.05"
+            class="input-modern"
           />
         </div>
       </div>
@@ -314,7 +322,7 @@
         >
         <select
           id="programStatus"
-          class="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 hover:border-purple-300 focus:ring-4 focus:ring-purple-100 bg-white select-modern"
+            class="input-modern select-modern w-full sm:w-auto"
         >
           <option value="เปิดใช้งาน">เปิดใช้งาน</option>
           <option value="ปิดใช้งาน">ปิดใช้งาน</option>
@@ -534,8 +542,8 @@
       .map(
         (prog) => `
       <tr class="hover:bg-purple-50/30 transition-all duration-0.05">
-        <td class="px-6 py-4">
-          <div class="font-bold text-gray-900">${prog.programId}</div>
+        <td class="px-6 py-4 text-sm font-semibold text-gray-700">
+          ${prog.programId}
         </td>
         <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">${
           prog.description || "-"

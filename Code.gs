@@ -597,6 +597,7 @@ function setupAllSheets() {
         "เด็ก (คน)",
         "ราคาผู้ใหญ่",
         "ราคาเด็ก",
+        "ค่าใช้จ่ายเพิ่มเติม",
         "ส่วนลด (บาท)",
         "สถานะ",
         "URL สลิปการชำระเงิน",
@@ -1745,10 +1746,10 @@ function getDashboardData(sessionToken, startDate, endDate) {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       const bookingDate = new Date(row[1]);
-      const status = row[10];
-      const totalAmount = row[14];
-      const program = row[4];
-      const agent = row[12];
+      const status = row[11]; // Column L: Status (Previously K/10)
+      const totalAmount = Number(row[15]) || 0; // Column P: Total Amount (Previously O/14)
+      const program = row[4]; // Column E: Program (Index 4 remains same)
+      const agent = row[13]; // Column N: Agent (Previously M/12)
 
       // Skip if outside date range
       if (filterStart && bookingDate < filterStart) continue;
@@ -1827,7 +1828,7 @@ function getDashboardData(sessionToken, startDate, endDate) {
 
       // Location stats
       if (status === CONFIG.STATUS.COMPLETE && row[3]) {
-        const locationName = row[3]; // Column D is Location Name
+        const locationName = row[3]; // Column D: Location Name (Index 3 remains same)
         if (!locationStats[locationName]) {
           locationStats[locationName] = 0;
         }
@@ -2342,16 +2343,17 @@ function getAllBookings(sessionToken) {
         children: row[6],
         adultPrice: row[7],
         childPrice: row[8],
-        discount: row[9],
-        status: row[10],
-        slipUrl: row[11],
-        agent: row[12],
-        notes: row[13],
-        totalAmount: row[14],
-        createdBy: row[15],
-        createdAt: formatDate(row[16], "dd/MM/yyyy HH:mm:ss"),
-        updatedBy: row[17],
-        updatedAt: formatDate(row[18], "dd/MM/yyyy HH:mm:ss"),
+        additionalCost: row[9], // Column J: ค่าใช้จ่ายเพิ่มเติม (ใหม่)
+        discount: row[10], // Column K: ส่วนลด (เดิมคือ J)
+        status: row[11], // Column L: สถานะ (เดิมคือ K)
+        slipUrl: row[12], // Column M: Slip URL (เดิมคือ L)
+        agent: row[13], // Column N: Agent (เดิมคือ M)
+        notes: row[14], // Column O: หมายเหตุ (เดิมคือ N)
+        totalAmount: row[15], // Column P: ยอดขายต่อรายการ (เดิมคือ O)
+        createdBy: row[16], // Column Q: ผู้สร้าง (เดิมคือ P)
+        createdAt: formatDate(row[17], "dd/MM/yyyy HH:mm:ss"), // Column R (เดิมคือ Q)
+        updatedBy: row[18], // Column S: ผู้แก้ไขล่าสุด (เดิมคือ R)
+        updatedAt: formatDate(row[19], "dd/MM/yyyy HH:mm:ss"), // Column T (เดิมคือ S)
       });
     }
 
@@ -2465,10 +2467,11 @@ function createBooking(sessionToken, bookingData) {
       };
     }
 
-    // Calculate total amount
+    // Calculate total amount (including additional cost)
     const totalAmount =
       (bookingData.adults || 0) * (bookingData.adultPrice || 0) +
-      (bookingData.children || 0) * (bookingData.childPrice || 0) -
+      (bookingData.children || 0) * (bookingData.childPrice || 0) +
+      (bookingData.additionalCost || 0) -
       (bookingData.discount || 0);
 
     // Generate booking ID
@@ -2486,16 +2489,17 @@ function createBooking(sessionToken, bookingData) {
       bookingData.children || 0,
       bookingData.adultPrice || 0,
       bookingData.childPrice || 0,
-      bookingData.discount || 0,
-      CONFIG.STATUS.CONFIRM, // Default status (ไม่มีสลิป = Confirm เลย)
-      "", // Slip URL (empty for now)
-      bookingData.agent || "",
-      bookingData.notes || "",
-      totalAmount,
-      session.username, // Created by
-      now, // Created at
-      session.username, // Updated by
-      now, // Updated at
+      bookingData.additionalCost || 0, // Column J: ค่าใช้จ่ายเพิ่มเติม
+      bookingData.discount || 0, // Column K: ส่วนลด (เดิมคือ J)
+      CONFIG.STATUS.CONFIRM, // Column L: สถานะ (เดิมคือ K)
+      "", // Column M: Slip URL (เดิมคือ L)
+      bookingData.agent || "", // Column N: Agent (เดิมคือ M)
+      bookingData.notes || "", // Column O: หมายเหตุ (เดิมคือ N)
+      totalAmount, // Column P: ยอดขายต่อรายการ (เดิมคือ O)
+      session.username, // Column Q: Created by (เดิมคือ P)
+      now, // Column R: Created at (เดิมคือ Q)
+      session.username, // Column S: Updated by (เดิมคือ R)
+      now, // Column T: Updated at (เดิมคือ S)
     ];
 
     // Append to sheet
@@ -2541,7 +2545,7 @@ function updateBooking(sessionToken, bookingId, bookingData) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === bookingId) {
         rowIndex = i + 1; // Sheet row is 1-indexed
-        createdBy = data[i][15]; // Column P: ผู้สร้าง
+        createdBy = data[i][16]; // Column Q: ผู้สร้าง (เดิมคือ P)
         break;
       }
     }
@@ -2573,10 +2577,11 @@ function updateBooking(sessionToken, bookingId, bookingData) {
       };
     }
 
-    // Calculate total amount
+    // Calculate total amount (including additional cost)
     const totalAmount =
       (bookingData.adults || 0) * (bookingData.adultPrice || 0) +
-      (bookingData.children || 0) * (bookingData.childPrice || 0) -
+      (bookingData.children || 0) * (bookingData.childPrice || 0) +
+      (bookingData.additionalCost || 0) -
       (bookingData.discount || 0);
 
     const now = getCurrentTimestamp();
@@ -2590,12 +2595,13 @@ function updateBooking(sessionToken, bookingId, bookingData) {
     sheet.getRange(rowIndex, 7).setValue(bookingData.children || 0);
     sheet.getRange(rowIndex, 8).setValue(bookingData.adultPrice || 0);
     sheet.getRange(rowIndex, 9).setValue(bookingData.childPrice || 0);
-    sheet.getRange(rowIndex, 10).setValue(bookingData.discount || 0);
-    sheet.getRange(rowIndex, 13).setValue(bookingData.agent || "");
-    sheet.getRange(rowIndex, 14).setValue(bookingData.notes || "");
-    sheet.getRange(rowIndex, 15).setValue(totalAmount);
-    sheet.getRange(rowIndex, 18).setValue(session.username); // Updated by
-    sheet.getRange(rowIndex, 19).setValue(now); // Updated at
+    sheet.getRange(rowIndex, 10).setValue(bookingData.additionalCost || 0); // Column J: ค่าใช้จ่ายเพิ่มเติม
+    sheet.getRange(rowIndex, 11).setValue(bookingData.discount || 0); // Column K: ส่วนลด (เดิมคือ J)
+    sheet.getRange(rowIndex, 14).setValue(bookingData.agent || ""); // Column N: Agent (เดิมคือ M)
+    sheet.getRange(rowIndex, 15).setValue(bookingData.notes || ""); // Column O: หมายเหตุ (เดิมคือ N)
+    sheet.getRange(rowIndex, 16).setValue(totalAmount); // Column P: ยอดขายต่อรายการ (เดิมคือ O)
+    sheet.getRange(rowIndex, 19).setValue(session.username); // Column S: Updated by (เดิมคือ R)
+    sheet.getRange(rowIndex, 20).setValue(now); // Column T: Updated at (เดิมคือ S)
 
     return {
       success: true,
@@ -2635,7 +2641,7 @@ function deleteBooking(sessionToken, bookingId, reason) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === bookingId) {
         rowIndex = i + 1;
-        createdBy = data[i][15]; // Column P: ผู้สร้าง
+        createdBy = data[i][16]; // Column Q: ผู้สร้าง (เดิมคือ P)
         break;
       }
     }
@@ -2667,12 +2673,12 @@ function deleteBooking(sessionToken, bookingId, reason) {
 
     // Soft delete - change status to Cancel
     const now = getCurrentTimestamp();
-    const oldStatus = data[rowIndex - 1][10]; // Column K (Index 10)
+    const oldStatus = data[rowIndex - 1][11]; // Column L: สถานะ (เดิมคือ K)
 
-    sheet.getRange(rowIndex, 11).setValue(CONFIG.STATUS.CANCEL); // Status -> Cancel
+    sheet.getRange(rowIndex, 12).setValue(CONFIG.STATUS.CANCEL); // Column L: Status -> Cancel (เดิมคือ K)
 
-    sheet.getRange(rowIndex, 18).setValue(session.username); // Updated By
-    sheet.getRange(rowIndex, 19).setValue(now); // Updated At
+    sheet.getRange(rowIndex, 19).setValue(session.username); // Column S: Updated By (เดิมคือ R)
+    sheet.getRange(rowIndex, 20).setValue(now); // Column T: Updated At (เดิมคือ S)
 
     // Log to History
     try {
@@ -2819,11 +2825,11 @@ function updateBookingSlip(sessionToken, bookingId, slipUrl) {
       };
     }
 
-    // Update slip URL (Column L) and ensure status is CONFIRM (Column K)
-    sheet.getRange(rowIndex, 12).setValue(slipUrl); // Slip URL
-    sheet.getRange(rowIndex, 11).setValue(CONFIG.STATUS.CONFIRM); // Status → CONFIRM (มีสลิป = ยืนยัน)
-    sheet.getRange(rowIndex, 18).setValue(session.username); // Updated by
-    sheet.getRange(rowIndex, 19).setValue(getCurrentTimestamp()); // Updated at
+    // Update slip URL (Column M) and ensure status is CONFIRM (Column L)
+    sheet.getRange(rowIndex, 13).setValue(slipUrl); // Column M: Slip URL (เดิมคือ L)
+    sheet.getRange(rowIndex, 12).setValue(CONFIG.STATUS.CONFIRM); // Column L: Status → CONFIRM (เดิมคือ K)
+    sheet.getRange(rowIndex, 19).setValue(session.username); // Column S: Updated by (เดิมคือ R)
+    sheet.getRange(rowIndex, 20).setValue(getCurrentTimestamp()); // Column T: Updated at (เดิมคือ S)
 
     return {
       success: true,
@@ -2879,7 +2885,7 @@ function getBookingsForApproval(sessionToken, filterStatus = null) {
       // Skip empty rows
       if (!row[0]) continue;
 
-      const status = row[10]; // Column K: สถานะ
+      const status = row[11]; // Column L: สถานะ (เดิมคือ K)
 
       // Filter by status if specified
       if (filterStatus && status !== filterStatus) {
@@ -2898,16 +2904,17 @@ function getBookingsForApproval(sessionToken, filterStatus = null) {
           children: row[6],
           adultPrice: row[7],
           childPrice: row[8],
-          discount: row[9],
-          status: status,
-          slipUrl: row[11],
-          agent: row[12],
-          note: row[13],
-          totalAmount: row[14],
-          createdBy: row[15],
-          createdAt: formatDate(row[16], "dd/MM/yyyy HH:mm:ss"),
-          updatedBy: row[17],
-          updatedAt: formatDate(row[18], "dd/MM/yyyy HH:mm:ss"),
+          additionalCost: row[9], // Column J: ค่าใช้จ่ายเพิ่มเติม (ใหม่)
+          discount: row[10], // Column K: ส่วนลด (เดิมคือ J)
+          status: status, // Column L (เดิมคือ K)
+          slipUrl: row[12], // Column M (เดิมคือ L)
+          agent: row[13], // Column N (เดิมคือ M)
+          note: row[14], // Column O (เดิมคือ N)
+          totalAmount: row[15], // Column P (เดิมคือ O)
+          createdBy: row[16], // Column Q (เดิมคือ P)
+          createdAt: formatDate(row[17], "dd/MM/yyyy HH:mm:ss"), // Column R (เดิมคือ Q)
+          updatedBy: row[18], // Column S (เดิมคือ R)
+          updatedAt: formatDate(row[19], "dd/MM/yyyy HH:mm:ss"), // Column T (เดิมคือ S)
         });
       }
     }
@@ -2983,7 +2990,7 @@ function updateBookingStatus(sessionToken, bookingId, newStatus, reason = "") {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === bookingId) {
         rowIndex = i + 1;
-        oldStatus = data[i][10] || ""; // Column K: สถานะ
+        oldStatus = data[i][11] || ""; // Column L: สถานะ (เดิมคือ K)
         bookingData = data[i];
         break;
       }
@@ -2998,9 +3005,9 @@ function updateBookingStatus(sessionToken, bookingId, newStatus, reason = "") {
 
     // 5. Update Status in Booking_Raw
     const now = getCurrentTimestamp();
-    sheet.getRange(rowIndex, 11).setValue(newStatus); // Column K: สถานะ
-    sheet.getRange(rowIndex, 18).setValue(session.username); // Column R: ผู้แก้ไขล่าสุด
-    sheet.getRange(rowIndex, 19).setValue(now); // Column S: วันที่แก้ไขล่าสุด
+    sheet.getRange(rowIndex, 12).setValue(newStatus); // Column L: สถานะ (เดิมคือ K)
+    sheet.getRange(rowIndex, 19).setValue(session.username); // Column S: ผู้แก้ไขล่าสุด (เดิมคือ R)
+    sheet.getRange(rowIndex, 20).setValue(now); // Column T: วันที่แก้ไขล่าสุด (เดิมคือ S)
 
     // 6. Save to Status History
     const historyResult = saveStatusHistory(
@@ -3522,10 +3529,10 @@ function getDailySalesReport(sessionToken, startDate, endDate) {
       // Skip empty rows
       if (!row[0]) continue;
 
-      const status = row[10]; // Column K: สถานะ
-      const travelDate = new Date(row[2]); // Column C: วันที่เดินทาง
-      const location = row[3] || "ไม่ระบุ"; // Column D: สถานที่
-      const totalAmount = Number(row[14]) || 0; // Column O: ยอดรวม
+      const status = row[11]; // Column L: Status (Previously K/10)
+      const travelDate = new Date(row[2]); // Column C: Travel Date
+      const location = row[3] || "ไม่ระบุ"; // Column D: Location
+      const totalAmount = Number(row[15]) || 0; // Column P: Total Amount (Previously O/14)
 
       // Filter: Only Completed status
       if (status !== CONFIG.STATUS.COMPLETE) continue;
@@ -3598,12 +3605,12 @@ function getProgramSummaryReport(sessionToken, startDate, endDate) {
       // Skip empty rows
       if (!row[0]) continue;
 
-      const status = row[10]; // Column K: สถานะ
-      const travelDate = new Date(row[2]); // Column C: วันที่เดินทาง
-      const program = row[4] || "ไม่ระบุ"; // Column E: โปรแกรม
-      const adults = Number(row[5]) || 0; // Column F: ผู้ใหญ่
-      const children = Number(row[6]) || 0; // Column G: เด็ก
-      const totalAmount = Number(row[14]) || 0; // Column O: ยอดรวม
+      const status = row[11]; // Column L: Status (Previously K/10)
+      const travelDate = new Date(row[2]); // Column C: Travel Date
+      const program = row[4] || "ไม่ระบุ"; // Column E: Program
+      const adults = Number(row[5]) || 0; // Column F: Adults
+      const children = Number(row[6]) || 0; // Column G: Children
+      const totalAmount = Number(row[15]) || 0; // Column P: Total Amount (Previously O/14)
 
       // Filter: Only Completed status
       if (status !== CONFIG.STATUS.COMPLETE) continue;

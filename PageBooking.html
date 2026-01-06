@@ -1,82 +1,175 @@
 <!-- Booking Management Page - Modern UI -->
 <div class="space-y-6">
-  <!-- Header Actions -->
-  <div
-    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-  >
-    <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
-      <!-- Refresh Button -->
-      <button
-        onclick="refreshBookingsData()"
-        class="hidden sm:flex p-3 bg-white border-2 border-gray-100 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200 shadow-sm"
-        title="รีเฟรชข้อมูล"
-      >
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          ></path>
-        </svg>
-      </button>
-
-      <!-- Search -->
-      <div class="relative flex-1 sm:w-64">
-        <input
-          type="text"
-          id="searchBooking"
-          placeholder="ค้นหาการจอง..."
-          onkeyup="filterBookings()"
-          class="w-full pl-10 pr-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
-        />
-        <svg
-          class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          ></path>
-        </svg>
+  <!-- Date Filter Section -->
+  <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+    <!-- Dynamic Header & Filters Row -->
+    <div
+      class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+    >
+      <!-- Left side: Title (Always at top on Mobile, left on Desktop) -->
+      <div>
+        <h3 class="text-lg font-bold text-gray-800">กรองข้อมูลการจอง</h3>
+        <p class="text-sm text-gray-500 mt-1">เลือกช่วงเวลาเพื่อดูข้อมูล</p>
       </div>
 
-      <!-- Filter by Status -->
-      <select
-        id="filterStatus"
-        onchange="filterBookings()"
-        class="w-full sm:w-auto px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-white select-modern"
-      >
-        <option value="">ทุกสถานะ</option>
-        <option value="Confirm">Confirm</option>
-        <option value="Completed">Completed</option>
-        <option value="Cancel">Cancel</option>
-      </select>
+      <!-- Right side: All Filter Controls (Stacked on Mobile, Row on Desktop) -->
+      <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+        <!-- Part 1: Quick Filter Buttons (Grid on Mobile, Row on Desktop) -->
+        <div
+          class="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-row gap-2 order-2 lg:order-1"
+        >
+          <button
+            onclick="setBookingDateFilter('all')"
+            class="px-3 py-2 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-all font-medium text-sm whitespace-nowrap"
+          >
+            ทั้งหมด
+          </button>
+          <button
+            onclick="setBookingDateFilter('today')"
+            class="px-3 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-all font-medium text-sm whitespace-nowrap"
+          >
+            วันนี้
+          </button>
+          <button
+            onclick="setBookingDateFilter('month')"
+            class="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all font-medium text-sm whitespace-nowrap"
+          >
+            เดือนนี้
+          </button>
+          <button
+            onclick="setBookingDateFilter('year')"
+            class="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-all font-medium text-sm whitespace-nowrap"
+          >
+            ปีนี้
+          </button>
+        </div>
 
-      <!-- Date Range Filters -->
-      <input
-        type="date"
-        id="filterDateFrom"
-        onchange="filterBookings()"
-        class="w-full sm:w-auto px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
-        placeholder="วันที่เริ่มต้น"
-      />
-      <input
-        type="date"
-        id="filterDateTo"
-        onchange="filterBookings()"
-        class="w-full sm:w-auto px-4 py-3 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
-        placeholder="วันที่สิ้นสุด"
-      />
+        <!-- Part 2: Separator / Label -->
+        <div class="hidden lg:block w-px h-8 bg-gray-200 order-2"></div>
+        <div class="lg:hidden order-3 border-t border-gray-100 pt-4 mt-2">
+          <label
+            class="text-xs text-gray-500 uppercase tracking-wide mb-2 block"
+            >กำหนดช่วงเวลาเอง</label
+          >
+        </div>
+
+        <!-- Part 3: Date Inputs (Row with 'from-to' on Desktop, Stacked on Mobile) -->
+        <div
+          class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 order-3 lg:order-3"
+        >
+          <input
+            type="date"
+            id="filterDateFrom"
+            class="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 text-sm input-modern lg:w-40"
+            placeholder="จาก"
+          />
+          <span class="hidden sm:inline text-gray-400">-</span>
+          <input
+            type="date"
+            id="filterDateTo"
+            class="px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-purple-500 text-sm input-modern lg:w-40"
+            placeholder="ถึง"
+          />
+          <button
+            onclick="applyCustomBookingDateFilter()"
+            class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-sm whitespace-nowrap"
+          >
+            ค้นหา
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Filter Display -->
+    <div class="mt-4 pt-4 border-t border-gray-100">
+      <p class="text-sm text-gray-600">
+        <span class="font-semibold">ช่วงเวลาที่เลือก:</span>
+        <span id="currentBookingFilterText" class="text-purple-600 ml-2"
+          >ทั้งหมด</span
+        >
+      </p>
+    </div>
+  </div>
+
+  <!-- Header Actions -->
+  <div
+    class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4"
+  >
+    <!-- Search and Filters -->
+    <div class="w-full lg:w-auto lg:flex-1">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-3 lg:items-center"
+      >
+        <!-- Refresh & Search Group -->
+        <div class="flex flex-row gap-2 sm:col-span-2 lg:flex-1">
+          <!-- Refresh Button -->
+          <button
+            onclick="refreshBookingsData()"
+            class="flex-shrink-0 flex items-center justify-center p-3 bg-white border-2 border-gray-100 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-100 hover:bg-purple-50 transition-all duration-200 shadow-sm"
+            title="รีเฟรชข้อมูล"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Search -->
+          <div class="relative flex-1 lg:w-64">
+            <input
+              type="text"
+              id="searchBooking"
+              placeholder="ค้นหาการจอง..."
+              onkeyup="filterBookings()"
+              class="w-full input-modern pl-10"
+            />
+            <svg
+              class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Filter by Status -->
+        <select
+          id="filterStatus"
+          onchange="filterBookings()"
+          class="w-full lg:w-auto input-modern select-modern"
+        >
+          <option value="">ทุกสถานะ</option>
+          <option value="Confirm">Confirm</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancel">Cancel</option>
+        </select>
+
+        <!-- Filter by Location -->
+        <select
+          id="filterLocation"
+          onchange="filterBookings()"
+          class="w-full lg:w-auto input-modern select-modern"
+        >
+          <option value="">ทุกสถานที่</option>
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
     </div>
 
     <!-- Add Booking Button -->
@@ -452,6 +545,21 @@
             />
           </div>
 
+          <!-- ค่าใช้จ่ายเพิ่มเติม -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >ค่าใช้จ่ายเพิ่มเติม (บาท)</label
+            >
+            <input
+              type="number"
+              id="additionalCost"
+              min="0"
+              value="0"
+              class="input-modern"
+              onchange="calculateTotal()"
+            />
+          </div>
+
           <!-- ส่วนลด -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2"
@@ -671,6 +779,35 @@
                   </div>
                   <span class="font-bold text-gray-900" id="childTotal"
                     >0 ฿</span
+                  >
+                </div>
+
+                <div
+                  class="flex items-center justify-between text-sm"
+                  id="additionalCostRow"
+                >
+                  <div class="flex items-center space-x-2">
+                    <svg
+                      class="w-4 h-4 text-orange-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      ></path>
+                    </svg>
+                    <span class="text-gray-600 font-medium"
+                      >ค่าใช้จ่ายเพิ่มเติม</span
+                    >
+                  </div>
+                  <span
+                    class="font-bold text-orange-600"
+                    id="additionalCostAmount"
+                    >+ 0 ฿</span
                   >
                 </div>
 
@@ -1095,13 +1232,134 @@
   var currentSession = null;
 
   /**
+   * Format Date for Input (YYYY-MM-DD)
+   */
+  function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Format Date to Thai (DD/MM/YYYY)
+   */
+  function formatDateThai(date) {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  /**
+   * Convert Thai Date Format (DD/MM/YYYY) to Input Format (YYYY-MM-DD)
+   */
+  function convertThaiDateToInputFormat(thaiDate) {
+    if (!thaiDate || thaiDate.trim() === "") return "";
+
+    // Check if already in YYYY-MM-DD format
+    if (thaiDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return thaiDate;
+    }
+
+    // Convert from DD/MM/YYYY to YYYY-MM-DD
+    const parts = thaiDate.split("/");
+    if (parts.length === 3) {
+      const day = parts[0].padStart(2, "0");
+      const month = parts[1].padStart(2, "0");
+      const year = parts[2];
+      return `${year}-${month}-${day}`;
+    }
+
+    return "";
+  }
+
+  /**
+   * Set Booking Date Filter (Quick Filters)
+   */
+  function setBookingDateFilter(type) {
+    const today = new Date();
+    let startDate, endDate;
+
+    switch (type) {
+      case "all":
+        startDate = "";
+        endDate = "";
+        document.getElementById("currentBookingFilterText").textContent =
+          "ทั้งหมด";
+        break;
+
+      case "today":
+        startDate = endDate = formatDateForInput(today);
+        document.getElementById("currentBookingFilterText").textContent =
+          "วันนี้";
+        break;
+
+      case "month":
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        startDate = formatDateForInput(firstDay);
+        endDate = formatDateForInput(lastDay);
+        document.getElementById("currentBookingFilterText").textContent =
+          "เดือนนี้";
+        break;
+
+      case "year":
+        const yearStart = new Date(today.getFullYear(), 0, 1);
+        const yearEnd = new Date(today.getFullYear(), 11, 31);
+        startDate = formatDateForInput(yearStart);
+        endDate = formatDateForInput(yearEnd);
+        document.getElementById("currentBookingFilterText").textContent =
+          "ปีนี้";
+        break;
+    }
+
+    // Update input fields
+    document.getElementById("filterDateFrom").value = startDate;
+    document.getElementById("filterDateTo").value = endDate;
+
+    // Trigger filter
+    filterBookings();
+  }
+
+  /**
+   * Apply Custom Booking Date Filter
+   */
+  function applyCustomBookingDateFilter() {
+    const startDate = document.getElementById("filterDateFrom").value;
+    const endDate = document.getElementById("filterDateTo").value;
+
+    if (!startDate || !endDate) {
+      showToast("กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด", "warning");
+      return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+      showToast("วันที่เริ่มต้นต้องน้อยกว่าหรือเท่ากับวันที่สิ้นสุด", "error");
+      return;
+    }
+
+    // Update filter display
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    document.getElementById(
+      "currentBookingFilterText"
+    ).textContent = `${formatDateThai(start)} - ${formatDateThai(end)}`;
+
+    // Trigger filter
+    filterBookings();
+  }
+
+  /**
    * Refresh Bookings Data
    */
   function refreshBookingsData() {
     document.getElementById("searchBooking").value = "";
     document.getElementById("filterStatus").value = "";
+    document.getElementById("filterLocation").value = "";
     document.getElementById("filterDateFrom").value = "";
     document.getElementById("filterDateTo").value = "";
+    document.getElementById("currentBookingFilterText").textContent = "ทั้งหมด";
     loadBookings();
   }
 
@@ -1114,6 +1372,30 @@
       showToast("กรุณาเข้าสู่ระบบใหม่", "error");
       return;
     }
+
+    // Initialize date inputs if not already set
+    const startDateEl = document.getElementById("filterDateFrom");
+    const endDateEl = document.getElementById("filterDateTo");
+
+    if (startDateEl && endDateEl && !startDateEl.value && !endDateEl.value) {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      startDateEl.value = formatDateForInput(firstDay);
+      endDateEl.value = formatDateForInput(lastDay);
+    }
+
+    // Default to this month if no dates provided
+    if (!startDate || !endDate) {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      startDate = formatDateForInput(firstDay);
+      endDate = formatDateForInput(lastDay);
+    }
+
+    document.getElementById("currentBookingFilterText").textContent =
+      "เดือนนี้";
 
     currentSession = session;
 
@@ -1155,6 +1437,7 @@
     ]).then(([locationsResult, programsResult]) => {
       if (locationsResult.success) {
         allLocations = locationsResult.data;
+        populateLocationFilter();
       }
       if (programsResult.success) {
         allPrograms = programsResult.data;
@@ -1164,9 +1447,12 @@
       google.script.run
         .withSuccessHandler(function (response) {
           if (response.success) {
-            allBookings = response.data || [];
-            currentFilteredBookings = allBookings;
-            renderBookingPagination();
+            // Sort by bookingId in descending order (newest first)
+            allBookings = (response.data || []).sort((a, b) => {
+              return b.bookingId.localeCompare(a.bookingId);
+            });
+            // Apply current filters instead of showing all
+            filterBookings();
           } else {
             showToast(response.message || "ไม่สามารถโหลดข้อมูลได้", "error");
             document.getElementById("bookingTableBody").innerHTML = `
@@ -1189,6 +1475,25 @@
           `;
         })
         .getAllBookings(session.sessionToken);
+    });
+  }
+
+  /**
+   * Populate Location Filter Dropdown
+   */
+  function populateLocationFilter() {
+    const filterLocation = document.getElementById("filterLocation");
+    if (!filterLocation) return;
+
+    // Clear existing options except the first one
+    filterLocation.innerHTML = '<option value="">ทุกสถานที่</option>';
+
+    // Add location options
+    allLocations.forEach((location) => {
+      const option = document.createElement("option");
+      option.value = location.locationName;
+      option.textContent = location.locationName;
+      filterLocation.appendChild(option);
     });
   }
 
@@ -1224,8 +1529,10 @@
           const statusBadge = getStatusBadge(booking.status);
           const totalPeople = (booking.adults || 0) + (booking.children || 0);
           const isCancelled = booking.status === "Cancel";
+          const isCompleted = booking.status === "Completed";
           const canEdit =
             !isCancelled &&
+            !isCompleted &&
             currentSession &&
             (currentSession.role === "Owner" ||
               booking.createdBy === currentSession.username);
@@ -1252,9 +1559,7 @@
                 <div class="text-sm font-medium text-gray-900">${
                   booking.location
                 }</div>
-                <div class="text-xs text-gray-500">${
-                  booking.program
-                }</div>
+                <div class="text-xs text-gray-500">${booking.program}</div>
               </td>
               <td class="px-6 py-4">
                 <div class="text-sm font-bold text-gray-900">${formatNumber(
@@ -1322,8 +1627,10 @@
             const statusBadge = getStatusBadge(booking.status);
             const totalPeople = (booking.adults || 0) + (booking.children || 0);
             const isCancelled = booking.status === "Cancel";
+            const isCompleted = booking.status === "Completed";
             const canEdit =
               !isCancelled &&
+              !isCompleted &&
               currentSession &&
               (currentSession.role === "Owner" ||
                 booking.createdBy === currentSession.username);
@@ -1337,9 +1644,7 @@
                      }</span>
                       ${
                         booking.program
-                          ? `<h3 class="font-semibold text-gray-800 line-clamp-1">${
-                              booking.program
-                            }</h3>`
+                          ? `<h3 class="font-semibold text-gray-800 line-clamp-1">${booking.program}</h3>`
                           : '<div class="h-5"></div>'
                       }
                      <p class="text-sm text-gray-500 flex items-center mt-1">
@@ -1353,9 +1658,9 @@
                  <div class="space-y-2 text-sm text-gray-600 mb-4 border-t border-b border-gray-50 py-3 bg-gray-50/50 -mx-4 px-4">
                    <div class="flex justify-between">
                      <span class="text-gray-500">เดินทาง</span>
-                     <span class="font-medium text-gray-800">${formatDateDisplay(
+                     <span class="font-medium text-gray-800">${
                        booking.travelDate
-                     )}</span>
+                     }</span>
                    </div>
                    <div class="flex justify-between">
                      <span class="text-gray-500">จำนวนคน</span>
@@ -1411,6 +1716,7 @@
       .getElementById("searchBooking")
       .value.toLowerCase();
     const statusFilter = document.getElementById("filterStatus").value;
+    const locationFilter = document.getElementById("filterLocation")?.value;
     const dateFrom = document.getElementById("filterDateFrom").value;
     const dateTo = document.getElementById("filterDateTo").value;
 
@@ -1425,16 +1731,42 @@
       // Status filter
       const matchStatus = !statusFilter || booking.status === statusFilter;
 
-      // Date filter
-      const matchDate =
-        (!dateFrom || booking.travelDate >= dateFrom) &&
-        (!dateTo || booking.travelDate <= dateTo);
+      // Location filter
+      const matchLocation =
+        !locationFilter || booking.location === locationFilter;
 
-      return matchSearch && matchStatus && matchDate;
+      // Date filter - Convert booking.bookingDate from DD/MM/YYYY to YYYY-MM-DD for comparison
+      let matchDate = true;
+      if (dateFrom || dateTo) {
+        const bookingDate = booking.bookingDate;
+        // Check if bookingDate is in DD/MM/YYYY format
+        if (bookingDate && bookingDate.includes("/")) {
+          const parts = bookingDate.split("/");
+          if (parts.length === 3) {
+            // Convert DD/MM/YYYY to YYYY-MM-DD
+            const comparableDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            matchDate =
+              (!dateFrom || comparableDate >= dateFrom) &&
+              (!dateTo || comparableDate <= dateTo);
+          }
+        } else {
+          // If already in YYYY-MM-DD format
+          matchDate =
+            (!dateFrom || bookingDate >= dateFrom) &&
+            (!dateTo || bookingDate <= dateTo);
+        }
+      }
+
+      return matchSearch && matchStatus && matchLocation && matchDate;
+    });
+
+    // Sort by bookingId in descending order (newest first)
+    const sorted = filtered.sort((a, b) => {
+      return b.bookingId.localeCompare(a.bookingId);
     });
 
     // Save filtered result and reset to page 1
-    currentFilteredBookings = filtered;
+    currentFilteredBookings = sorted;
     currentBookingPage = 1;
     renderBookingPagination();
   }
@@ -1612,6 +1944,7 @@
     document.getElementById("adultTotal").textContent = "0 ฿";
     document.getElementById("childSummary").textContent = "เด็ก: 0 คน × 0 ฿";
     document.getElementById("childTotal").textContent = "0 ฿";
+    document.getElementById("additionalCostAmount").textContent = "0 ฿";
     document.getElementById("discountAmount").textContent = "0 ฿";
     document.getElementById("totalAmount").textContent = "0 ฿";
 
@@ -1708,12 +2041,14 @@
       parseFloat(document.getElementById("adultPrice").value) || 0;
     const childPrice =
       parseFloat(document.getElementById("childPrice").value) || 0;
+    const additionalCost =
+      parseFloat(document.getElementById("additionalCost").value) || 0;
     const discount = parseFloat(document.getElementById("discount").value) || 0;
 
     // Calculate subtotals
     const adultSubtotal = adults * adultPrice;
     const childSubtotal = children * childPrice;
-    const total = adultSubtotal + childSubtotal - discount;
+    const total = adultSubtotal + childSubtotal + additionalCost - discount;
 
     // Update adult summary
     document.getElementById(
@@ -1728,6 +2063,10 @@
     ).textContent = `เด็ก: ${children} คน × ${formatNumber(childPrice)} ฿`;
     document.getElementById("childTotal").textContent =
       formatNumber(childSubtotal) + " ฿";
+
+    // Update additional cost
+    document.getElementById("additionalCostAmount").textContent =
+      additionalCost > 0 ? `+ ${formatNumber(additionalCost)} ฿` : "0 ฿";
 
     // Update discount
     document.getElementById("discountAmount").textContent =
@@ -1767,6 +2106,8 @@
           parseFloat(document.getElementById("adultPrice").value) || 0,
         childPrice:
           parseFloat(document.getElementById("childPrice").value) || 0,
+        additionalCost:
+          parseFloat(document.getElementById("additionalCost").value) || 0,
         discount: parseFloat(document.getElementById("discount").value) || 0,
         agent: document.getElementById("agent").value,
         notes: document.getElementById("notes").value,
@@ -1931,8 +2272,12 @@
     subtitle.classList.remove("hidden");
     document.getElementById("editMode").value = "true";
     document.getElementById("bookingId").value = booking.bookingId;
-    document.getElementById("bookingDate").value = booking.bookingDate;
-    document.getElementById("travelDate").value = booking.travelDate;
+    document.getElementById("bookingDate").value = convertThaiDateToInputFormat(
+      booking.bookingDate
+    );
+    document.getElementById("travelDate").value = convertThaiDateToInputFormat(
+      booking.travelDate
+    );
 
     // Load locations and programs first (ใช้ข้อมูลที่มีอยู่แล้วใน allLocations และ allPrograms)
     loadLocationsToSelect();
@@ -1946,6 +2291,8 @@
     document.getElementById("children").value = booking.children;
     document.getElementById("adultPrice").value = booking.adultPrice;
     document.getElementById("childPrice").value = booking.childPrice;
+    document.getElementById("additionalCost").value =
+      booking.additionalCost || 0;
     document.getElementById("discount").value = booking.discount;
     document.getElementById("agent").value = booking.agent || "";
     document.getElementById("notes").value = booking.notes || "";
@@ -2040,9 +2387,7 @@
           <div class="text-sm font-bold text-gray-900 mt-1">${
             booking.location
           }</div>
-          <div class="text-sm text-gray-600 mt-1">${
-            booking.program
-          }</div>
+          <div class="text-sm text-gray-600 mt-1">${booking.program}</div>
         </div>
 
         <!-- Pricing Details -->
@@ -2065,11 +2410,15 @@
                 booking.children * booking.childPrice
               )} ฿</span>
             </div>
+            <div class="flex justify-between text-sm text-orange-600">
+              <span>ค่าใช้จ่ายเพิ่มเติม</span>
+              <span class="font-bold">${formatNumber(
+                booking.additionalCost
+              )} ฿</span>
+            </div>
             <div class="flex justify-between text-sm text-red-600">
               <span>ส่วนลด</span>
-              <span class="font-bold">-${formatNumber(
-                booking.discount
-              )} ฿</span>
+              <span class="font-bold">${formatNumber(booking.discount)} ฿</span>
             </div>
             <div class="border-t-2 border-purple-300 pt-2 mt-2 flex justify-between">
               <span class="font-bold text-gray-900">ยอดรวมทั้งสิ้น</span>
