@@ -122,7 +122,7 @@
         <a
           href="#"
           data-page="payment-approval"
-          data-role="AR_AP,Owner"
+          data-role="AR_AP,Owner,Cost"
           class="sidebar-item hidden flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all duration-200"
         >
           <svg
@@ -145,7 +145,7 @@
         <a
           href="#"
           data-page="refund"
-          data-role="AR_AP,Owner"
+          data-role="AR_AP,Owner,Cost"
           class="sidebar-item hidden flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all duration-200"
         >
           <svg
@@ -609,7 +609,11 @@
       navigateTo(lastPage);
     } else {
       // โหลดหน้า default ตาม role
-      if (currentUser.role === "Cost" || currentUser.role === "Owner") {
+      if (
+        currentUser.role === "Admin" ||
+        currentUser.role === "Cost" ||
+        currentUser.role === "Owner"
+      ) {
         loadPageContent("dashboard");
         navigateTo("dashboard");
       } else if (currentUser.role === "AR_AP") {
@@ -667,16 +671,22 @@
         isVisible = false;
       }
 
-      // Rule 3: AR_AP Role - Show only Booking and Payment Approval
-      if (
-        role === "AR_AP" &&
-        pageName !== "booking" &&
-        pageName !== "payment-approval" &&
-        pageName !== "refund" &&
-        pageName !== "programs" &&
-        pageName !== "locations"
-      ) {
-        isVisible = false;
+      // Rule 3: AR_AP/Cost Role - Restrictions
+      if (role === "AR_AP" || role === "Cost") {
+        let allowedPages = [
+          "booking",
+          "payment-approval",
+          "refund",
+          "programs",
+          "locations",
+        ];
+        if (role === "Cost") {
+          allowedPages.push("dashboard", "reports");
+        }
+
+        if (!allowedPages.includes(pageName)) {
+          isVisible = false;
+        }
       }
 
       if (isVisible) {

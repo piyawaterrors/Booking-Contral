@@ -2340,6 +2340,7 @@ function getAllBookings(sessionToken, startDate, endDate) {
       CONFIG.ROLES.OWNER,
       CONFIG.ROLES.ADMIN,
       CONFIG.ROLES.AR_AP,
+      CONFIG.ROLES.COST,
     ];
     const canViewAll = viewingAllRoles.includes(session.role);
     const currentUser = session.username;
@@ -2874,10 +2875,11 @@ function getBookingsForApproval(
       };
     }
 
-    // Check role (AR/AP or Owner only)
+    // Check role (AR/AP, Owner, or Cost only)
     if (
       session.role !== CONFIG.ROLES.AR_AP &&
-      session.role !== CONFIG.ROLES.OWNER
+      session.role !== CONFIG.ROLES.OWNER &&
+      session.role !== CONFIG.ROLES.COST
     ) {
       return {
         success: false,
@@ -4020,8 +4022,8 @@ function getAllRefunds(sessionToken, dateFrom = "", dateTo = "") {
       };
     }
 
-    // Check permission (only AR/AP and Owner)
-    if (!["AR_AP", "Owner"].includes(session.role)) {
+    // Check permission (only AR/AP, Owner and Cost)
+    if (!["AR_AP", "Owner", "Cost"].includes(session.role)) {
       return { success: false, message: "คุณไม่มีสิทธิ์ในการดูรายการคืนเงิน" };
     }
 

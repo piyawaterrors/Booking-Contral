@@ -216,6 +216,7 @@
             สลิป
           </th>
           <th
+            id="th-manage"
             class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider"
           >
             จัดการ
@@ -1157,6 +1158,19 @@
     const gridBody = document.getElementById("paymentGridBody");
     const emptyState = document.getElementById("emptyPaymentState");
 
+    const session = getSessionFromStorage();
+    const isCostRole = session && session.role === "Cost";
+
+    // Hide/Show Manage Header
+    const thManage = document.getElementById("th-manage");
+    if (thManage) {
+      if (isCostRole) {
+        thManage.classList.add("hidden");
+      } else {
+        thManage.classList.remove("hidden");
+      }
+    }
+
     if (payments.length === 0) {
       tbody.innerHTML = `
         <tr>
@@ -1223,7 +1237,7 @@
               : '<span class="text-gray-400">-</span>'
           }
         </td>
-        <td class="px-6 py-4 text-center">
+        <td class="px-6 py-4 text-center ${isCostRole ? "hidden" : ""}">
           ${
             payment.status !== "Cancel"
               ? `<button 
@@ -1300,7 +1314,7 @@
                   รายละเอียด
                 </button>
                 ${
-                  payment.status !== "Cancel"
+                  !isCostRole && payment.status !== "Cancel"
                     ? `<button onclick='event.stopPropagation(); openUpdateStatusModal(${JSON.stringify(
                         payment
                       ).replace(
@@ -1402,6 +1416,9 @@
 
   // View Payment Detail
   function viewPaymentDetail(payment) {
+    const session = getSessionFromStorage();
+    const isCostRole = session && session.role === "Cost";
+
     currentPayment = payment;
 
     const totalPeople = (payment.adults || 0) + (payment.children || 0);
@@ -1660,6 +1677,9 @@
             </div>
           </div>
 
+          ${
+            !isCostRole
+              ? `
           <button 
             id="savePaymentBtn"
             onclick="savePaymentAmounts()"
@@ -1671,6 +1691,9 @@
             </svg>
             <span id="savePaymentText">บันทึกข้อมูลการชำระเงิน</span>
           </button>
+          `
+              : ""
+          }
         </div>
 
         ${
@@ -1711,6 +1734,20 @@
             : ""
         }
 
+        ${
+          payment.notes
+            ? `
+        <div class="mt-4">
+            <h4 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">หมายเหตุการจอง</h4>
+            <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800 flex items-start gap-2">
+                 <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                 <p>${payment.notes}</p>
+            </div>
+        </div>
+        `
+            : ""
+        }
+
         <!-- 7. Refund Status (Dynamic) -->
         <div id="refundStatusContainer"></div>
 
@@ -1745,6 +1782,9 @@
 
     // Footer Buttons
     const footerContent = `
+      ${
+        !isCostRole
+          ? `
       <button 
         onclick='openRefundModal(${JSON.stringify(payment).replace(
           /'/g,
@@ -1769,6 +1809,9 @@
               </svg>
               เปลี่ยนสถานะ
             </button>`
+          : ""
+      }
+      `
           : ""
       }
 
