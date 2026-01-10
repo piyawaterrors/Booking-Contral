@@ -2765,7 +2765,7 @@
 
     try {
       // Generate PDF using frontend (from PDFGenerator.html)
-      await previewInvoicePDF(booking);
+      await previewPDF(booking);
       loading.classList.add("hidden");
     } catch (error) {
       loading.classList.add("hidden");
@@ -2822,7 +2822,7 @@
 
     try {
       // Generate PDF using frontend (from PDFGenerator.html)
-      await previewReceiptPDF(booking);
+      await previewPDF(booking);
       loading.classList.add("hidden");
     } catch (error) {
       loading.classList.add("hidden");
@@ -2974,7 +2974,7 @@
                      <div class="flex justify-between text-sm">
                          <span class="text-gray-600">ค่าใช้จ่ายเพิ่มเติม</span>
                          <span class="font-semibold text-gray-900">${Number(
-                           booking.additionalCosts || 0
+                           booking.additionalCost || 0
                          ).toLocaleString()} ฿</span>
                      </div>
                     ${
